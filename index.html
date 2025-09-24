@@ -189,11 +189,43 @@
         align-items: center;
         flex-wrap: wrap;
     }
+    .item-tabs {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-top: 1rem;
+    }
+    .item-tabs .item-tab {
+        background: rgba(255, 255, 255, 0.04);
+        color: var(--text-color);
+        border: 1px solid var(--border-color);
+        border-radius: 999px;
+        padding: 0.45rem 1rem;
+        font-size: 0.95rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+        transform: none;
+    }
+    .item-tabs .item-tab:hover:not(.active) {
+        background: rgba(255, 255, 255, 0.08);
+        border-color: #3c4f7f;
+        transform: none;
+    }
+    .item-tabs .item-tab.active {
+        background: linear-gradient(135deg, #0f3460 0%, #1f4d8a 100%);
+        color: #ffffff;
+        border-color: transparent;
+        box-shadow: 0 8px 18px rgba(15, 52, 96, 0.35);
+    }
+    .item-tab-panels { margin-top: 1rem; }
+    .item-tab-panel { display: none; }
+    .item-tab-panel.active { display: grid; }
     .item-list-content {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
         gap: 0.75rem;
-        margin-top: 1rem;
+        margin-top: 0;
     }
     .item {
         display: flex;
@@ -410,6 +442,10 @@
         <div class="scen-item"><input type="radio" name="stack" value="stack2" id="stack2"><label for="stack2">2중첩 (+10% 무공)</label></div>
         <div class="scen-item"><input type="radio" name="stack" value="stack3" id="stack3"><label for="stack3">3중첩 (+15% 무공)</label></div>
       </div>
+      <div class="am-scenarios">
+        <h3>조건부 효과</h3>
+        <div class="scen-item"><input type="checkbox" id="chkConditional"><label for="chkConditional">기술, 생존 아이템 조건부 활성화</label></div>
+      </div>
     </div>
   </div>
 
@@ -431,34 +467,531 @@
 
   <div class="item-list">
     <h2>아이템 목록 <small>(포함/고정 토글)</small> <button id="calcItems">선택 아이템 계산</button></h2>
-    <div class="item-list-content">
-      <!-- 1,000 -->
-      <div class="item green" id="item-무기기름칠" data-name="무기 기름칠" data-price="1000" data-wp="0" data-as="5"><div class="item-controls"><label title="포함" class="chip include-chip"><input type="checkbox" class="include"><span>포함</span></label><label title="고정" class="chip pin-chip"><input type="checkbox" class="pin"><span>고정</span></label></div><span class="item-label">무기 기름칠 (1,000)<br>공속+5%</span></div>
-      <div class="item green" id="item-보정기" data-name="보정기" data-price="1000" data-wp="5" data-as="0"><div class="item-controls"><label title="포함" class="chip include-chip"><input type="checkbox" class="include"><span>포함</span></label><label title="고정" class="chip pin-chip"><input type="checkbox" class="pin"><span>고정</span></label></div><span class="item-label">보정기 (1,000)<br>무공+5%</span></div>
-      <!-- 3,750 -->
-      <div class="item blue" id="item-부품시장발사핀" data-name="부품 시장 발사 핀" data-price="3750" data-wp="0" data-as="10"><div class="item-controls"><label title="포함" class="chip include-chip"><input type="checkbox" class="include"><span>포함</span></label><label title="고정" class="chip pin-chip"><input type="checkbox" class="pin"><span>고정</span></label></div><span class="item-label">부품 시장 발사 핀 (3,750)<br>공속+10%</span></div>
-      <!-- 4,000 -->
-      <div class="item blue" id="item-고급나노생물학" data-name="고급 나노생물학" data-price="4000" data-wp="5" data-as="10"><div class="item-controls"><label title="포함" class="chip include-chip"><input type="checkbox" class="include"><span>포함</span></label><label title="고정" class="chip pin-chip"><input type="checkbox" class="pin"><span>고정</span></label></div><span class="item-label">고급 나노생물학 (4,000)<br>무공+5%, 공속+10%</span></div>
-      <div class="item blue" id="item-공중기동기" data-name="공중 기동기" data-price="4000" data-wp="5" data-as="10" data-fixed-only="true"><div class="item-controls"><label title="포함" class="chip include-chip"><input type="checkbox" class="include"><span>포함</span></label><label title="고정" class="chip pin-chip"><input type="checkbox" class="pin"><span>고정</span></label></div><span class="item-label">공중 기동기 (4,000)<br>무공+5%, 공속+10%(고정 전용)</span></div>
-      <!-- 5,500 -->
-      <div class="item blue" id="item-차가운냉각수" data-name="차가운 냉각수" data-price="5500" data-wp="10" data-as="0"><div class="item-controls"><label title="포함" class="chip include-chip"><input type="checkbox" class="include"><span>포함</span></label><label title="고정" class="chip pin-chip"><input type="checkbox" class="pin"><span>고정</span></label></div><span class="item-label">차가운 냉각수 (5,500)<br>무공+10%</span></div>
-      <!-- 6,000 -->
-      <div class="item blue" id="item-탈론개조모듈" data-name="탈론 개조 모듈" data-price="6000" data-wp="15" data-as="0"><div class="item-controls"><label title="포함" class="chip include-chip"><input type="checkbox" class="include"><span>포함</span></label><label title="고정" class="chip pin-chip"><input type="checkbox" class="pin"><span>고정</span></label></div><span class="item-label">탈론 개조 모듈 (6,000)<br>무공+15%</span></div>
-      <!-- 9,000 -->
-      <div class="item purple" id="item-코드브레이커" data-name="코드브레이커" data-price="9000" data-wp="15" data-as="0"><div class="item-controls"><label title="포함" class="chip include-chip"><input type="checkbox" class="include"><span>포함</span></label><label title="고정" class="chip pin-chip"><input type="checkbox" class="pin"><span>고정</span></label></div><span class="item-label">코드브레이커 (9,000)<br>무공+15%</span></div>
-      <!-- 9,500 -->
-       <div class="item purple" id="item-오버드라이브핵" data-name="오버드라이브 핵" data-price="9500" data-wp="10" data-as="0"><div class="item-controls"><label title="포함" class="chip include-chip"><input type="checkbox" class="include"><span>포함</span></label><label title="고정" class="chip pin-chip"><input type="checkbox" class="pin"><span>고정</span></label></div><span class="item-label">오버드라이브 핵 (9,500)<br>무공+10%</span></div>
-      <!-- 10,000 -->
-      <div class="item purple" id="item-카두세우스연장기" data-name="카두세우스 연장기" data-price="10000" data-wp="10" data-as="0"><div class="item-controls"><label title="포함" class="chip include-chip"><input type="checkbox" class="include"><span>포함</span></label><label title="고정" class="chip pin-chip"><input type="checkbox" class="pin"><span>고정</span></label></div><span class="item-label">카두세우스 연장기 (10,000)<br>무공+10%</span></div>
-      <!-- 11,000 -->
-      <div class="item purple" id="item-강화광가속기" data-name="강화광 가속기" data-price="11000" data-wp="10" data-as="0"><div class="item-controls"><label title="포함" class="chip include-chip"><input type="checkbox" class="include"><span>포함</span></label><label title="고정" class="chip pin-chip"><input type="checkbox" class="pin"><span>고정</span></label></div><span class="item-label">강화광 가속기 (11,000)<br>무공+10%</span></div>
-      <div class="item purple" id="item-성운전도" data-name="성운전도" data-price="11000" data-wp="5" data-as="0"><div class="item-controls"><label title="포함" class="chip include-chip"><input type="checkbox" class="include"><span>포함</span></label><label title="고정" class="chip pin-chip"><input type="checkbox" class="pin"><span>고정</span></label></div><span class="item-label">성운전도 (11,000)<br>무공+5%</span></div>
-      <div class="item purple" id="item-부스터제트" data-name="부스터 제트" data-price="11000" data-wp="0" data-as="20"><div class="item-controls"><label title="포함" class="chip include-chip"><input type="checkbox" class="include"><span>포함</span></label><label title="고정" class="chip pin-chip"><input type="checkbox" class="pin"><span>고정</span></label></div><span class="item-label">부스터 제트 (11,000)<br>공속+20%</span></div>
-      <div class="item purple" id="item-아마리해독제" data-name="아마리의 해독제" data-price="11000" data-wp="15" data-as="0"><div class="item-controls"><label title="포함" class="chip include-chip"><input type="checkbox" class="include"><span>포함</span></label><label title="고정" class="chip pin-chip"><input type="checkbox" class="pin"><span>고정</span></label></div><span class="item-label">아마리의 해독제 (11,000)<br>무공+15% (HP&lt;50%)</span></div>
-      <!-- 14,000 -->
-      <div class="item purple" id="item-거미의눈" data-name="거미의 눈" data-price="14000" data-wp="25" data-as="0"><div class="item-controls"><label title="포함" class="chip include-chip"><input type="checkbox" class="include"><span>포함</span></label><label title="고정" class="chip pin-chip"><input type="checkbox" class="pin"><span>고정</span></label></div><span class="item-label">거미의 눈 (14,000)<br>무공+25%</span></div>
-      <!-- 14,500 -->
-      <div class="item purple" id="item-종결자" data-name="종결자" data-price="14500" data-wp="20" data-as="0"><div class="item-controls"><label title="포함" class="chip include-chip"><input type="checkbox" class="include"><span>포함</span></label><label title="고정" class="chip pin-chip"><input type="checkbox" class="pin"><span>고정</span></label></div><span class="item-label">종결자 (14,500)<br>무공+20%</span></div>
+    <div class="item-tabs" role="tablist" aria-label="아이템 분류">
+      <button class="item-tab active" type="button" role="tab" aria-selected="true" data-tab-target="weapon">무기</button>
+      <button class="item-tab" type="button" role="tab" aria-selected="false" data-tab-target="tech">기술</button>
+      <button class="item-tab" type="button" role="tab" aria-selected="false" data-tab-target="survival">생존</button>
+    </div>
+    <div class="item-tab-panels">
+      <div class="item-list-content item-tab-panel active" role="tabpanel" data-tab-panel="weapon">
+      <!-- Weapon Items -->
+      <div class="item green" id="item-무기기름칠" data-name="무기 기름칠" data-price="1000" data-wp="0" data-as="5">
+        <div class="item-controls">
+          <label title="포함" class="chip include-chip"><input type="checkbox" class="include"><span>포함</span></label>
+          <label title="고정" class="chip pin-chip"><input type="checkbox" class="pin"><span>고정</span></label>
+        </div>
+        <span class="item-label">무기 기름칠 (1,000)<br>공속+5%</span>
+      </div>
+      <div class="item green" id="item-보정기" data-name="보정기" data-price="1000" data-wp="5" data-as="0">
+        <div class="item-controls">
+          <label title="포함" class="chip include-chip"><input type="checkbox" class="include"><span>포함</span></label>
+          <label title="고정" class="chip pin-chip"><input type="checkbox" class="pin"><span>고정</span></label>
+        </div>
+        <span class="item-label">보정기 (1,000)<br>무공+5%</span>
+      </div>
+      <div class="item blue" id="item-부품시장발사핀" data-name="부품 시장 발사 핀" data-price="3750" data-wp="0" data-as="10">
+        <div class="item-controls">
+          <label title="포함" class="chip include-chip"><input type="checkbox" class="include"><span>포함</span></label>
+          <label title="고정" class="chip pin-chip"><input type="checkbox" class="pin"><span>고정</span></label>
+        </div>
+        <span class="item-label">부품 시장 발사 핀 (3,750)<br>공속+10%</span>
+      </div>
+      <div class="item blue" id="item-고급나노생물학" data-name="고급 나노생물학" data-price="4000" data-wp="5" data-as="10">
+        <div class="item-controls">
+          <label title="포함" class="chip include-chip"><input type="checkbox" class="include"><span>포함</span></label>
+          <label title="고정" class="chip pin-chip"><input type="checkbox" class="pin"><span>고정</span></label>
+        </div>
+        <span class="item-label">고급 나노생물학 (4,000)<br>무공+5%, 공속+10%</span>
+      </div>
+      <div class="item blue" id="item-공중기동기" data-name="공중 기동기" data-price="4000" data-wp="5" data-as="10" data-fixed-only="true">
+        <div class="item-controls">
+          <label title="포함" class="chip include-chip"><input type="checkbox" class="include"><span>포함</span></label>
+          <label title="고정" class="chip pin-chip"><input type="checkbox" class="pin"><span>고정</span></label>
+        </div>
+        <span class="item-label">공중 기동기 (4,000)<br>무공+5%, 공속+10%(고정 전용)</span>
+      </div>
+      <div class="item blue" id="item-꽉채운잔" data-name="꽉 채운 잔" data-price="4500" data-wp="0" data-as="5">
+        <div class="item-controls">
+          <label title="포함" class="chip include-chip"><input type="checkbox" class="include"><span>포함</span></label>
+          <label title="고정" class="chip pin-chip"><input type="checkbox" class="pin"><span>고정</span></label>
+        </div>
+        <span class="item-label">꽉 채운 잔 (4,500)<br>공속+5%</span>
+      </div>
+      <div class="item blue" id="item-차가운냉각수" data-name="차가운 냉각수" data-price="5500" data-wp="10" data-as="0">
+        <div class="item-controls">
+          <label title="포함" class="chip include-chip"><input type="checkbox" class="include"><span>포함</span></label>
+          <label title="고정" class="chip pin-chip"><input type="checkbox" class="pin"><span>고정</span></label>
+        </div>
+        <span class="item-label">차가운 냉각수 (5,500)<br>무공+10%</span>
+      </div>
+      <div class="item blue" id="item-탈론개조모듈" data-name="탈론 개조 모듈" data-price="6000" data-wp="15" data-as="0">
+        <div class="item-controls">
+          <label title="포함" class="chip include-chip"><input type="checkbox" class="include"><span>포함</span></label>
+          <label title="고정" class="chip pin-chip"><input type="checkbox" class="pin"><span>고정</span></label>
+        </div>
+        <span class="item-label">탈론 개조 모듈 (6,000)<br>무공+15%</span>
+      </div>
+      <div class="item purple" id="item-공중조난자" data-name="공중 조난자" data-price="9000" data-wp="0" data-as="10">
+        <div class="item-controls">
+          <label title="포함" class="chip include-chip"><input type="checkbox" class="include"><span>포함</span></label>
+          <label title="고정" class="chip pin-chip"><input type="checkbox" class="pin"><span>고정</span></label>
+        </div>
+        <span class="item-label">공중 조난자 (9,000)<br>공속+10%</span>
+      </div>
+      <div class="item purple" id="item-코드브레이커" data-name="코드브레이커" data-price="9000" data-wp="15" data-as="0">
+        <div class="item-controls">
+          <label title="포함" class="chip include-chip"><input type="checkbox" class="include"><span>포함</span></label>
+          <label title="고정" class="chip pin-chip"><input type="checkbox" class="pin"><span>고정</span></label>
+        </div>
+        <span class="item-label">코드브레이커 (9,000)<br>무공+15%</span>
+      </div>
+      <div class="item purple" id="item-회수산탄" data-name="회수 산탄" data-price="9000" data-wp="0" data-as="10">
+        <div class="item-controls">
+          <label title="포함" class="chip include-chip"><input type="checkbox" class="include"><span>포함</span></label>
+          <label title="고정" class="chip pin-chip"><input type="checkbox" class="pin"><span>고정</span></label>
+        </div>
+        <span class="item-label">회수 산탄 (9,000)<br>공속+10%</span>
+      </div>
+      <div class="item purple" id="item-볼스카야군수품" data-name="볼스카야 군수품" data-price="9500" data-wp="0" data-as="10">
+        <div class="item-controls">
+          <label title="포함" class="chip include-chip"><input type="checkbox" class="include"><span>포함</span></label>
+          <label title="고정" class="chip pin-chip"><input type="checkbox" class="pin"><span>고정</span></label>
+        </div>
+        <span class="item-label">볼스카야 군수품 (9,500)<br>공속+10%</span>
+      </div>
+      <div class="item purple" id="item-무기재머" data-name="무기 재머" data-price="10000" data-wp="10" data-as="0">
+        <div class="item-controls">
+          <label title="포함" class="chip include-chip"><input type="checkbox" class="include"><span>포함</span></label>
+          <label title="고정" class="chip pin-chip"><input type="checkbox" class="pin"><span>고정</span></label>
+        </div>
+        <span class="item-label">무기 재머 (10,000)<br>무공+10%</span>
+      </div>
+      <div class="item purple" id="item-사령관의탄창" data-name="사령관의 탄창" data-price="10000" data-wp="0" data-as="10">
+        <div class="item-controls">
+          <label title="포함" class="chip include-chip"><input type="checkbox" class="include"><span>포함</span></label>
+          <label title="고정" class="chip pin-chip"><input type="checkbox" class="pin"><span>고정</span></label>
+        </div>
+        <span class="item-label">사령관의 탄창 (10,000)<br>공속+10%</span>
+      </div>
+      <div class="item purple" id="item-카두세우스연장기" data-name="카두세우스 연장기" data-price="10000" data-wp="10" data-as="0">
+        <div class="item-controls">
+          <label title="포함" class="chip include-chip"><input type="checkbox" class="include"><span>포함</span></label>
+          <label title="고정" class="chip pin-chip"><input type="checkbox" class="pin"><span>고정</span></label>
+        </div>
+        <span class="item-label">카두세우스 연장기 (10,000)<br>무공+10%</span>
+      </div>
+      <div class="item purple" id="item-강화광가속기" data-name="강화광 가속기" data-price="11000" data-wp="10" data-as="0">
+        <div class="item-controls">
+          <label title="포함" class="chip include-chip"><input type="checkbox" class="include"><span>포함</span></label>
+          <label title="고정" class="chip pin-chip"><input type="checkbox" class="pin"><span>고정</span></label>
+        </div>
+        <span class="item-label">강화광 가속기 (11,000)<br>무공+10%</span>
+      </div>
+      <div class="item purple" id="item-부스터제트" data-name="부스터 제트" data-price="11000" data-wp="0" data-as="20">
+        <div class="item-controls">
+          <label title="포함" class="chip include-chip"><input type="checkbox" class="include"><span>포함</span></label>
+          <label title="고정" class="chip pin-chip"><input type="checkbox" class="pin"><span>고정</span></label>
+        </div>
+        <span class="item-label">부스터 제트 (11,000)<br>공속+20%</span>
+      </div>
+      <div class="item purple" id="item-성운전도" data-name="성운 전도" data-price="11000" data-wp="5" data-as="0">
+        <div class="item-controls">
+          <label title="포함" class="chip include-chip"><input type="checkbox" class="include"><span>포함</span></label>
+          <label title="고정" class="chip pin-chip"><input type="checkbox" class="pin"><span>고정</span></label>
+        </div>
+        <span class="item-label">성운 전도 (11,000)<br>무공+5%</span>
+      </div>
+      <div class="item purple" id="item-아마리의해독제" data-name="아마리의 해독제" data-price="11000" data-wp="15" data-as="0">
+        <div class="item-controls">
+          <label title="포함" class="chip include-chip"><input type="checkbox" class="include"><span>포함</span></label>
+          <label title="고정" class="chip pin-chip"><input type="checkbox" class="pin"><span>고정</span></label>
+        </div>
+        <span class="item-label">아마리의 해독제 (11,000)<br>무공+15% (HP<50%)</span>
+      </div>
+      <div class="item purple" id="item-엘사가제압기" data-name="엘사가 제압기" data-price="11000" data-wp="10" data-as="0">
+        <div class="item-controls">
+          <label title="포함" class="chip include-chip"><input type="checkbox" class="include"><span>포함</span></label>
+          <label title="고정" class="chip pin-chip"><input type="checkbox" class="pin"><span>고정</span></label>
+        </div>
+        <span class="item-label">엘사가 제압기 (11,000)<br>무공+10%</span>
+      </div>
+      <div class="item purple" id="item-거미의눈" data-name="거미의 눈" data-price="14000" data-wp="25" data-as="0">
+        <div class="item-controls">
+          <label title="포함" class="chip include-chip"><input type="checkbox" class="include"><span>포함</span></label>
+          <label title="고정" class="chip pin-chip"><input type="checkbox" class="pin"><span>고정</span></label>
+        </div>
+        <span class="item-label">거미의 눈 (14,000)<br>무공+25%</span>
+      </div>
+      <div class="item purple" id="item-종결자" data-name="종결자" data-price="14500" data-wp="20" data-as="0">
+        <div class="item-controls">
+          <label title="포함" class="chip include-chip"><input type="checkbox" class="include"><span>포함</span></label>
+          <label title="고정" class="chip pin-chip"><input type="checkbox" class="pin"><span>고정</span></label>
+        </div>
+        <span class="item-label">종결자 (14,500)<br>무공+20%</span>
+      </div>
+      </div>
+      <div class="item-list-content item-tab-panel" role="tabpanel" data-tab-panel="tech" hidden>
+      <!-- Tech Items -->
+      <div class="item green" id="item-수상쩍은장관" data-name="수상쩍은 장관" data-price="1000" data-wp="0" data-as="0">
+        <div class="item-controls">
+          <label title="포함" class="chip include-chip"><input type="checkbox" class="include"><span>포함</span></label>
+          <label title="고정" class="chip pin-chip"><input type="checkbox" class="pin"><span>고정</span></label>
+        </div>
+        <span class="item-label">수상쩍은 장관 (1,000)<br>무공+0%, 공속+0%</span>
+      </div>
+      <div class="item green" id="item-충전판갑" data-name="충전 판갑" data-price="1000" data-wp="0" data-as="0">
+        <div class="item-controls">
+          <label title="포함" class="chip include-chip"><input type="checkbox" class="include"><span>포함</span></label>
+          <label title="고정" class="chip pin-chip"><input type="checkbox" class="pin"><span>고정</span></label>
+        </div>
+        <span class="item-label">충전 판갑 (1,000)<br>무공+0%, 공속+0%</span>
+      </div>
+      <div class="item green" id="item-파워전술" data-name="파워 전술" data-price="1000" data-wp="0" data-as="0">
+        <div class="item-controls">
+          <label title="포함" class="chip include-chip"><input type="checkbox" class="include"><span>포함</span></label>
+          <label title="고정" class="chip pin-chip"><input type="checkbox" class="pin"><span>고정</span></label>
+        </div>
+        <span class="item-label">파워 전술 (1,000)<br>무공+0%, 공속+0%</span>
+      </div>
+      <div class="item green" id="item-승리의태도" data-name="승리의 태도" data-price="1500" data-wp="0" data-as="0">
+        <div class="item-controls">
+          <label title="포함" class="chip include-chip"><input type="checkbox" class="include"><span>포함</span></label>
+          <label title="고정" class="chip pin-chip"><input type="checkbox" class="pin"><span>고정</span></label>
+        </div>
+        <span class="item-label">승리의 태도 (1,500)<br>무공+0%, 공속+0%</span>
+      </div>
+      <div class="item blue" id="item-맞춤형개머리판" data-name="맞춤형 개머리판" data-price="3750" data-wp="5" data-as="0">
+        <div class="item-controls">
+          <label title="포함" class="chip include-chip"><input type="checkbox" class="include"><span>포함</span></label>
+          <label title="고정" class="chip pin-chip"><input type="checkbox" class="pin"><span>고정</span></label>
+        </div>
+        <span class="item-label">맞춤형 개머리판 (3,750)<br>무공+5%</span>
+      </div>
+      <div class="item blue" id="item-생체광오버플로" data-name="생체광 오버플로" data-price="4000" data-wp="0" data-as="0">
+        <div class="item-controls">
+          <label title="포함" class="chip include-chip"><input type="checkbox" class="include"><span>포함</span></label>
+          <label title="고정" class="chip pin-chip"><input type="checkbox" class="pin"><span>고정</span></label>
+        </div>
+        <span class="item-label">생체광 오버플로 (4,000)<br>무공+0%, 공속+0%</span>
+      </div>
+      <div class="item blue" id="item-손목싸개" data-name="손목 싸개" data-price="4000" data-wp="0" data-as="10">
+        <div class="item-controls">
+          <label title="포함" class="chip include-chip"><input type="checkbox" class="include"><span>포함</span></label>
+          <label title="고정" class="chip pin-chip"><input type="checkbox" class="pin"><span>고정</span></label>
+        </div>
+        <span class="item-label">손목 싸개 (4,000)<br>공속+10%</span>
+      </div>
+      <div class="item blue" id="item-스카이라인나노머신" data-name="스카이라인 나노머신" data-price="4000" data-wp="0" data-as="0">
+        <div class="item-controls">
+          <label title="포함" class="chip include-chip"><input type="checkbox" class="include"><span>포함</span></label>
+          <label title="고정" class="chip pin-chip"><input type="checkbox" class="pin"><span>고정</span></label>
+        </div>
+        <span class="item-label">스카이라인 나노머신 (4,000)<br>무공+0%, 공속+0%</span>
+      </div>
+      <div class="item blue" id="item-쓰레기촌뭐더라" data-name="쓰레기촌 뭐더라" data-price="4000" data-wp="0" data-as="0">
+        <div class="item-controls">
+          <label title="포함" class="chip include-chip"><input type="checkbox" class="include"><span>포함</span></label>
+          <label title="고정" class="chip pin-chip"><input type="checkbox" class="pin"><span>고정</span></label>
+        </div>
+        <span class="item-label">쓰레기촌 뭐더라 (4,000)<br>무공+0%, 공속+0%</span>
+      </div>
+      <div class="item blue" id="item-에너지충전손목방어구" data-name="에너지 충전 손목 방어구" data-price="4000" data-wp="0" data-as="0">
+        <div class="item-controls">
+          <label title="포함" class="chip include-chip"><input type="checkbox" class="include"><span>포함</span></label>
+          <label title="고정" class="chip pin-chip"><input type="checkbox" class="pin"><span>고정</span></label>
+        </div>
+        <span class="item-label">에너지 충전 손목 방어구 (4,000)<br>무공+0%, 공속+0%</span>
+      </div>
+      <div class="item blue" id="item-다용도도구" data-name="다용도 도구" data-price="4500" data-wp="0" data-as="0">
+        <div class="item-controls">
+          <label title="포함" class="chip include-chip"><input type="checkbox" class="include"><span>포함</span></label>
+          <label title="고정" class="chip pin-chip"><input type="checkbox" class="pin"><span>고정</span></label>
+        </div>
+        <span class="item-label">다용도 도구 (4,500)<br>무공+0%, 공속+0%</span>
+      </div>
+      <div class="item blue" id="item-활력증폭기" data-name="활력 증폭기" data-price="5000" data-wp="0" data-as="0">
+        <div class="item-controls">
+          <label title="포함" class="chip include-chip"><input type="checkbox" class="include"><span>포함</span></label>
+          <label title="고정" class="chip pin-chip"><input type="checkbox" class="pin"><span>고정</span></label>
+        </div>
+        <span class="item-label">활력 증폭기 (5,000)<br>무공+0%, 공속+0%</span>
+      </div>
+      <div class="item blue" id="item-나노콜라" data-name="나노 콜라" data-price="6000" data-wp="0" data-as="0">
+        <div class="item-controls">
+          <label title="포함" class="chip include-chip"><input type="checkbox" class="include"><span>포함</span></label>
+          <label title="고정" class="chip pin-chip"><input type="checkbox" class="pin"><span>고정</span></label>
+        </div>
+        <span class="item-label">나노 콜라 (6,000)<br>무공+0%, 공속+0%</span>
+      </div>
+      <div class="item purple" id="item-음파재충전" data-name="음파 재충전" data-price="9000" data-wp="0" data-as="0">
+        <div class="item-controls">
+          <label title="포함" class="chip include-chip"><input type="checkbox" class="include"><span>포함</span></label>
+          <label title="고정" class="chip pin-chip"><input type="checkbox" class="pin"><span>고정</span></label>
+        </div>
+        <span class="item-label">음파 재충전 (9,000)<br>무공+0%, 공속+0%</span>
+      </div>
+      <div class="item purple" id="item-3연속토미건발사" data-name="3연속 토미건 발사" data-price="9500" data-wp="0" data-as="10">
+        <div class="item-controls">
+          <label title="포함" class="chip include-chip"><input type="checkbox" class="include"><span>포함</span></label>
+          <label title="고정" class="chip pin-chip"><input type="checkbox" class="pin"><span>고정</span></label>
+        </div>
+        <span class="item-label">3연속 토미건 발사 (9,500)<br>공속+10%</span>
+      </div>
+      <div class="item purple" id="item-루메리코융합기관포" data-name="루메리코 융합 기관포" data-price="10000" data-wp="0" data-as="0">
+        <div class="item-controls">
+          <label title="포함" class="chip include-chip"><input type="checkbox" class="include"><span>포함</span></label>
+          <label title="고정" class="chip pin-chip"><input type="checkbox" class="pin"><span>고정</span></label>
+        </div>
+        <span class="item-label">루메리코 융합 기관포 (10,000)<br>무공+0%, 공속+0%</span>
+      </div>
+      <div class="item purple" id="item-생체기술극대화" data-name="생체기술 극대화" data-price="10000" data-wp="0" data-as="0">
+        <div class="item-controls">
+          <label title="포함" class="chip include-chip"><input type="checkbox" class="include"><span>포함</span></label>
+          <label title="고정" class="chip pin-chip"><input type="checkbox" class="pin"><span>고정</span></label>
+        </div>
+        <span class="item-label">생체기술 극대화 (10,000)<br>무공+0%, 공속+0%</span>
+      </div>
+      <div class="item purple" id="item-초굴근" data-name="초굴근" data-price="10000" data-wp="10" data-as="0">
+        <div class="item-controls">
+          <label title="포함" class="chip include-chip"><input type="checkbox" class="include"><span>포함</span></label>
+          <label title="고정" class="chip pin-chip"><input type="checkbox" class="pin"><span>고정</span></label>
+        </div>
+        <span class="item-label">초굴근 (10,000)<br>무공+10%</span>
+      </div>
+      <div class="item purple" id="item-촉매수정" data-name="촉매 수정" data-price="10000" data-wp="0" data-as="0">
+        <div class="item-controls">
+          <label title="포함" class="chip include-chip"><input type="checkbox" class="include"><span>포함</span></label>
+          <label title="고정" class="chip pin-chip"><input type="checkbox" class="pin"><span>고정</span></label>
+        </div>
+        <span class="item-label">촉매 수정 (10,000)<br>무공+0%, 공속+0%</span>
+      </div>
+      <div class="item purple" id="item-사이버베놈" data-name="사이버베놈" data-price="10500" data-wp="0" data-as="0">
+        <div class="item-controls">
+          <label title="포함" class="chip include-chip"><input type="checkbox" class="include"><span>포함</span></label>
+          <label title="고정" class="chip pin-chip"><input type="checkbox" class="pin"><span>고정</span></label>
+        </div>
+        <span class="item-label">사이버베놈 (10,500)<br>무공+0%, 공속+0%</span>
+      </div>
+      <div class="item purple" id="item-광채눈동자" data-name="광채 눈동자" data-price="11000" data-wp="0" data-as="0">
+        <div class="item-controls">
+          <label title="포함" class="chip include-chip"><input type="checkbox" class="include"><span>포함</span></label>
+          <label title="고정" class="chip pin-chip"><input type="checkbox" class="pin"><span>고정</span></label>
+        </div>
+        <span class="item-label">광채 눈동자 (11,000)<br>무공+0%, 공속+0%</span>
+      </div>
+      <div class="item purple" id="item-액체질소" data-name="액체질소" data-price="11000" data-wp="0" data-as="0">
+        <div class="item-controls">
+          <label title="포함" class="chip include-chip"><input type="checkbox" class="include"><span>포함</span></label>
+          <label title="고정" class="chip pin-chip"><input type="checkbox" class="pin"><span>고정</span></label>
+        </div>
+        <span class="item-label">액체질소 (11,000)<br>무공+0%, 공속+0%</span>
+      </div>
+      <div class="item purple" id="item-여우의징표" data-name="여우의 징표" data-price="11000" data-wp="0" data-as="0">
+        <div class="item-controls">
+          <label title="포함" class="chip include-chip"><input type="checkbox" class="include"><span>포함</span></label>
+          <label title="고정" class="chip pin-chip"><input type="checkbox" class="pin"><span>고정</span></label>
+        </div>
+        <span class="item-label">여우의 징표 (11,000)<br>무공+0%, 공속+0%</span>
+      </div>
+      <div class="item purple" id="item-챔피언의도구" data-name="챔피언의 도구" data-price="14000" data-wp="0" data-as="0">
+        <div class="item-controls">
+          <label title="포함" class="chip include-chip"><input type="checkbox" class="include"><span>포함</span></label>
+          <label title="고정" class="chip pin-chip"><input type="checkbox" class="pin"><span>고정</span></label>
+        </div>
+        <span class="item-label">챔피언의 도구 (14,000)<br>무공+0%, 공속+0%</span>
+      </div>
+      </div>
+      <div class="item-list-content item-tab-panel" role="tabpanel" data-tab-panel="survival" hidden>
+      <!-- Survival Items -->
+      <div class="item green" id="item-러닝화" data-name="러닝화" data-price="1000" data-wp="0" data-as="0">
+        <div class="item-controls">
+          <label title="포함" class="chip include-chip"><input type="checkbox" class="include"><span>포함</span></label>
+          <label title="고정" class="chip pin-chip"><input type="checkbox" class="pin"><span>고정</span></label>
+        </div>
+        <span class="item-label">러닝화 (1,000)<br>무공+0%, 공속+0%</span>
+      </div>
+      <div class="item green" id="item-전투식량" data-name="전투식량" data-price="1000" data-wp="0" data-as="0">
+        <div class="item-controls">
+          <label title="포함" class="chip include-chip"><input type="checkbox" class="include"><span>포함</span></label>
+          <label title="고정" class="chip pin-chip"><input type="checkbox" class="pin"><span>고정</span></label>
+        </div>
+        <span class="item-label">전투식량 (1,000)<br>무공+0%, 공속+0%</span>
+      </div>
+      <div class="item green" id="item-전해액" data-name="전해액" data-price="1000" data-wp="0" data-as="0">
+        <div class="item-controls">
+          <label title="포함" class="chip include-chip"><input type="checkbox" class="include"><span>포함</span></label>
+          <label title="고정" class="chip pin-chip"><input type="checkbox" class="pin"><span>고정</span></label>
+        </div>
+        <span class="item-label">전해액 (1,000)<br>무공+0%, 공속+0%</span>
+      </div>
+      <div class="item green" id="item-탄도완화" data-name="탄도 완화" data-price="1000" data-wp="0" data-as="0">
+        <div class="item-controls">
+          <label title="포함" class="chip include-chip"><input type="checkbox" class="include"><span>포함</span></label>
+          <label title="고정" class="chip pin-chip"><input type="checkbox" class="pin"><span>고정</span></label>
+        </div>
+        <span class="item-label">탄도 완화 (1,000)<br>무공+0%, 공속+0%</span>
+      </div>
+      <div class="item green" id="item-심장박동센서" data-name="심장 박동 센서" data-price="1500" data-wp="0" data-as="0">
+        <div class="item-controls">
+          <label title="포함" class="chip include-chip"><input type="checkbox" class="include"><span>포함</span></label>
+          <label title="고정" class="chip pin-chip"><input type="checkbox" class="pin"><span>고정</span></label>
+        </div>
+        <span class="item-label">심장 박동 센서 (1,500)<br>무공+0%, 공속+0%</span>
+      </div>
+      <div class="item green" id="item-아드레날린주사" data-name="아드레날린 주사" data-price="1500" data-wp="0" data-as="0">
+        <div class="item-controls">
+          <label title="포함" class="chip include-chip"><input type="checkbox" class="include"><span>포함</span></label>
+          <label title="고정" class="chip pin-chip"><input type="checkbox" class="pin"><span>고정</span></label>
+        </div>
+        <span class="item-label">아드레날린 주사 (1,500)<br>무공+0%, 공속+0%</span>
+      </div>
+      <div class="item green" id="item-응급치료키트" data-name="응급 치료 키트" data-price="1500" data-wp="0" data-as="0">
+        <div class="item-controls">
+          <label title="포함" class="chip include-chip"><input type="checkbox" class="include"><span>포함</span></label>
+          <label title="고정" class="chip pin-chip"><input type="checkbox" class="pin"><span>고정</span></label>
+        </div>
+        <span class="item-label">응급 치료 키트 (1,500)<br>무공+0%, 공속+0%</span>
+      </div>
+      <div class="item green" id="item-장갑조끼" data-name="장갑 조끼" data-price="1500" data-wp="0" data-as="0">
+        <div class="item-controls">
+          <label title="포함" class="chip include-chip"><input type="checkbox" class="include"><span>포함</span></label>
+          <label title="고정" class="chip pin-chip"><input type="checkbox" class="pin"><span>고정</span></label>
+        </div>
+        <span class="item-label">장갑 조끼 (1,500)<br>무공+0%, 공속+0%</span>
+      </div>
+      <div class="item green" id="item-흡수장갑" data-name="흡수 장갑" data-price="1500" data-wp="0" data-as="0">
+        <div class="item-controls">
+          <label title="포함" class="chip include-chip"><input type="checkbox" class="include"><span>포함</span></label>
+          <label title="고정" class="chip pin-chip"><input type="checkbox" class="pin"><span>고정</span></label>
+        </div>
+        <span class="item-label">흡수 장갑 (1,500)<br>무공+0%, 공속+0%</span>
+      </div>
+      <div class="item blue" id="item-강철눈" data-name="강철 눈" data-price="3750" data-wp="0" data-as="0">
+        <div class="item-controls">
+          <label title="포함" class="chip include-chip"><input type="checkbox" class="include"><span>포함</span></label>
+          <label title="고정" class="chip pin-chip"><input type="checkbox" class="pin"><span>고정</span></label>
+        </div>
+        <span class="item-label">강철 눈 (3,750)<br>무공+0%, 공속+0%</span>
+      </div>
+      <div class="item blue" id="item-강화티타늄" data-name="강화 티타늄" data-price="3750" data-wp="0" data-as="0">
+        <div class="item-controls">
+          <label title="포함" class="chip include-chip"><input type="checkbox" class="include"><span>포함</span></label>
+          <label title="고정" class="chip pin-chip"><input type="checkbox" class="pin"><span>고정</span></label>
+        </div>
+        <span class="item-label">강화 티타늄 (3,750)<br>무공+0%, 공속+0%</span>
+      </div>
+      <div class="item blue" id="item-비슈카르콘덴서" data-name="비슈카르 콘덴서" data-price="3750" data-wp="0" data-as="0">
+        <div class="item-controls">
+          <label title="포함" class="chip include-chip"><input type="checkbox" class="include"><span>포함</span></label>
+          <label title="고정" class="chip pin-chip"><input type="checkbox" class="pin"><span>고정</span></label>
+        </div>
+        <span class="item-label">비슈카르 콘덴서 (3,750)<br>무공+0%, 공속+0%</span>
+      </div>
+      <div class="item blue" id="item-완충재" data-name="완충재" data-price="3750" data-wp="0" data-as="0">
+        <div class="item-controls">
+          <label title="포함" class="chip include-chip"><input type="checkbox" class="include"><span>포함</span></label>
+          <label title="고정" class="chip pin-chip"><input type="checkbox" class="pin"><span>고정</span></label>
+        </div>
+        <span class="item-label">완충재 (3,750)<br>무공+0%, 공속+0%</span>
+      </div>
+      <div class="item blue" id="item-E생명력" data-name="E생명력" data-price="4000" data-wp="0" data-as="0">
+        <div class="item-controls">
+          <label title="포함" class="chip include-chip"><input type="checkbox" class="include"><span>포함</span></label>
+          <label title="고정" class="chip pin-chip"><input type="checkbox" class="pin"><span>고정</span></label>
+        </div>
+        <span class="item-label">E생명력 (4,000)<br>무공+0%, 공속+0%</span>
+      </div>
+      <div class="item blue" id="item-철갑배기구" data-name="철갑 배기구" data-price="4000" data-wp="0" data-as="0">
+        <div class="item-controls">
+          <label title="포함" class="chip include-chip"><input type="checkbox" class="include"><span>포함</span></label>
+          <label title="고정" class="chip pin-chip"><input type="checkbox" class="pin"><span>고정</span></label>
+        </div>
+        <span class="item-label">철갑 배기구 (4,000)<br>무공+0%, 공속+0%</span>
+      </div>
+      <div class="item purple" id="item-피의구속" data-name="피의 구속" data-price="4000" data-wp="0" data-as="0">
+        <div class="item-controls">
+          <label title="포함" class="chip include-chip"><input type="checkbox" class="include"><span>포함</span></label>
+          <label title="고정" class="chip pin-chip"><input type="checkbox" class="pin"><span>고정</span></label>
+        </div>
+        <span class="item-label">피의 구속 (4,000)<br>무공+0%, 공속+0%</span>
+      </div>
+      <div class="item blue" id="item-성전사유압시스템" data-name="성전사 유압 시스템" data-price="4500" data-wp="0" data-as="0">
+        <div class="item-controls">
+          <label title="포함" class="chip include-chip"><input type="checkbox" class="include"><span>포함</span></label>
+          <label title="고정" class="chip pin-chip"><input type="checkbox" class="pin"><span>고정</span></label>
+        </div>
+        <span class="item-label">성전사 유압 시스템 (4,500)<br>무공+0%, 공속+0%<br><small>조건부 활성 시 공속+5%</small></span>
+      </div>
+      <div class="item blue" id="item-메카Z시리즈" data-name="메카 Z 시리즈" data-price="5000" data-wp="0" data-as="0">
+        <div class="item-controls">
+          <label title="포함" class="chip include-chip"><input type="checkbox" class="include"><span>포함</span></label>
+          <label title="고정" class="chip pin-chip"><input type="checkbox" class="pin"><span>고정</span></label>
+        </div>
+        <span class="item-label">메카 Z 시리즈 (5,000)<br>무공+0%, 공속+0%</span>
+      </div>
+      <div class="item purple" id="item-유전학자의약병" data-name="유전학자의 약병" data-price="9000" data-wp="0" data-as="0">
+        <div class="item-controls">
+          <label title="포함" class="chip include-chip"><input type="checkbox" class="include"><span>포함</span></label>
+          <label title="고정" class="chip pin-chip"><input type="checkbox" class="pin"><span>고정</span></label>
+        </div>
+        <span class="item-label">유전학자의 약병 (9,000)<br>무공+0%, 공속+0%</span>
+      </div>
+      <div class="item purple" id="item-신성한개입" data-name="신성한 개입" data-price="9500" data-wp="0" data-as="0">
+        <div class="item-controls">
+          <label title="포함" class="chip include-chip"><input type="checkbox" class="include"><span>포함</span></label>
+          <label title="고정" class="chip pin-chip"><input type="checkbox" class="pin"><span>고정</span></label>
+        </div>
+        <span class="item-label">신성한 개입 (9,500)<br>무공+0%, 공속+0%</span>
+      </div>
+      <div class="item purple" id="item-오버드라이브핵" data-name="오버드라이브 핵" data-price="9500" data-wp="10" data-as="0">
+        <div class="item-controls">
+          <label title="포함" class="chip include-chip"><input type="checkbox" class="include"><span>포함</span></label>
+          <label title="고정" class="chip pin-chip"><input type="checkbox" class="pin"><span>고정</span></label>
+        </div>
+        <span class="item-label">오버드라이브 핵 (9,500)<br>무공+10%</span>
+      </div>
+      <div class="item purple" id="item-뤼스퉁폰빌헬름" data-name="뤼스퉁 폰 빌헬름" data-price="10000" data-wp="0" data-as="0">
+        <div class="item-controls">
+          <label title="포함" class="chip include-chip"><input type="checkbox" class="include"><span>포함</span></label>
+          <label title="고정" class="chip pin-chip"><input type="checkbox" class="pin"><span>고정</span></label>
+        </div>
+        <span class="item-label">뤼스퉁 폰 빌헬름 (10,000)<br>무공+0%, 공속+0%</span>
+      </div>
+      <div class="item purple" id="item-바나듐주사" data-name="바나듐 주사" data-price="10000" data-wp="0" data-as="0">
+        <div class="item-controls">
+          <label title="포함" class="chip include-chip"><input type="checkbox" class="include"><span>포함</span></label>
+          <label title="고정" class="chip pin-chip"><input type="checkbox" class="pin"><span>고정</span></label>
+        </div>
+        <span class="item-label">바나듐 주사 (10,000)<br>무공+0%, 공속+0%<br><small>조건부 활성 시 무공+10%, 공속+10%</small></span>
+      </div>
+      <div class="item purple" id="item-어둠의건틀릿" data-name="어둠의 건틀릿" data-price="10000" data-wp="0" data-as="0">
+        <div class="item-controls">
+          <label title="포함" class="chip include-chip"><input type="checkbox" class="include"><span>포함</span></label>
+          <label title="고정" class="chip pin-chip"><input type="checkbox" class="pin"><span>고정</span></label>
+        </div>
+        <span class="item-label">어둠의 건틀릿 (10,000)<br>무공+0%, 공속+0%</span>
+      </div>
+      <div class="item purple" id="item-화성의수리공" data-name="화성의 수리공" data-price="10000" data-wp="0" data-as="0">
+        <div class="item-controls">
+          <label title="포함" class="chip include-chip"><input type="checkbox" class="include"><span>포함</span></label>
+          <label title="고정" class="chip pin-chip"><input type="checkbox" class="pin"><span>고정</span></label>
+        </div>
+        <span class="item-label">화성의 수리공 (10,000)<br>무공+0%, 공속+0%</span>
+      </div>
+      <div class="item purple" id="item-환영유입" data-name="환영 유입" data-price="10000" data-wp="10" data-as="0">
+        <div class="item-controls">
+          <label title="포함" class="chip include-chip"><input type="checkbox" class="include"><span>포함</span></label>
+          <label title="고정" class="chip pin-chip"><input type="checkbox" class="pin"><span>고정</span></label>
+        </div>
+        <span class="item-label">환영 유입 (10,000)<br>무공+10%</span>
+      </div>
+      <div class="item purple" id="item-오군디무감소장" data-name="오군디무 감소장" data-price="11000" data-wp="0" data-as="0">
+        <div class="item-controls">
+          <label title="포함" class="chip include-chip"><input type="checkbox" class="include"><span>포함</span></label>
+          <label title="고정" class="chip pin-chip"><input type="checkbox" class="pin"><span>고정</span></label>
+        </div>
+        <span class="item-label">오군디무 감소장 (11,000)<br>무공+0%, 공속+0%</span>
+      </div>
     </div>
   </div>
 </div>
@@ -472,11 +1005,14 @@
     const calcItemsBtn = document.getElementById('calcItems');
     const toggleScenarioBtn = document.getElementById('toggleScenario');
     const scenarioContent = document.querySelector('.scenario-content');
-    
+
     const includeInputs = Array.from(document.querySelectorAll('.include'));
     const pinInputs = Array.from(document.querySelectorAll('.pin'));
     const lowHpInput = document.getElementById('chkLowHp');
     const stackRadios = document.querySelectorAll('input[name="stack"]');
+    const conditionalToggle = document.getElementById('chkConditional');
+    const tabButtons = Array.from(document.querySelectorAll('.item-tab'));
+    const tabPanels = Array.from(document.querySelectorAll('.item-tab-panel'));
 
     const totalPriceEl = document.getElementById('totalPrice');
     const totalWPEl = document.getElementById('totalWP');
@@ -488,12 +1024,20 @@
     const baseHealing = 60;
     let debounceTimer;
 
+    includeInputs.forEach((input, idx) => {
+      const data = getItemData(input);
+      input.dataset.name = data.name;
+      if (pinInputs[idx]) {
+        pinInputs[idx].dataset.name = data.name;
+      }
+    });
+
     // --- 상태 저장(LocalStorage) ---
     const STORAGE_KEY = 'mercy_heal_calc_v1';
 
     function saveState() {
       try {
-        const includes = includeInputs.filter(i => i.checked).map(i => i.dataset.name);
+        const includes = includeInputs.filter(i => i.checked).map(i => i.dataset.name).filter(Boolean);
         const pins = pinInputs.map((p, idx) => p.checked ? includeInputs[idx].dataset.name : null).filter(Boolean);
         const stackSel = document.querySelector('input[name="stack"]:checked');
         const data = {
@@ -503,6 +1047,7 @@
           stackId: stackSel ? stackSel.id : 'stack-none',
           includes,
           pins,
+          conditional: !!(conditionalToggle && conditionalToggle.checked),
         };
         localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
       } catch (e) { /* noop */ }
@@ -520,6 +1065,9 @@
           const r = document.getElementById(data.stackId);
           if (r) r.checked = true;
         }
+        if (typeof data.conditional === 'boolean' && conditionalToggle) {
+          conditionalToggle.checked = data.conditional;
+        }
         includeInputs.forEach(i => i.checked = false);
         pinInputs.forEach(p => p.checked = false);
         if (Array.isArray(data.includes)) {
@@ -535,6 +1083,12 @@
     function initialize() {
         formatItemPrices();
         addEventListeners();
+        if (tabButtons.length) {
+            const defaultTab = document.querySelector('.item-tab.active') || tabButtons[0];
+            if (defaultTab) {
+                activateTab(defaultTab.dataset.tabTarget);
+            }
+        }
         loadState();
         enforceFixedOnlyRules();
         calculate(); // 초기 로드 시 계산
@@ -574,6 +1128,22 @@
       return { name, price, wp, as };
     }
 
+    function getEffectiveStats(inputEl) {
+      const base = getItemData(inputEl);
+      let wp = base.wp;
+      let as = base.as;
+      if (conditionalToggle && conditionalToggle.checked) {
+        if (base.name === '바나듐 주사') {
+          wp += 10;
+          as += 10;
+        }
+        if (base.name === '성전사 유압 시스템') {
+          as += 5;
+        }
+      }
+      return { ...base, wp, as };
+    }
+
     /** 시나리오에 따른 보너스 무공 값을 가져옵니다. */
     function getScenarioBonus() {
       let am = 0, stackBonus = 0;
@@ -596,7 +1166,7 @@
 
       includeInputs.forEach((input, idx) => {
         if (input.checked || pinInputs[idx].checked) {
-          const d = getItemData(input);
+          const d = getEffectiveStats(input);
           totalPrice += d.price;
           wp += d.wp;
           aspd += d.as;
@@ -626,88 +1196,124 @@
 
     /** 예산과 아이템 수에 맞는 최적의 조합을 추천합니다. */
     function recommend() {
-        if (recommendBtn.disabled) return; // 중복 실행 방지
-        
-        recommendBtn.disabled = true;
-        recommendBtn.textContent = '계산 중...';
-        
-        bestComboTbody.style.opacity = 0;
+      if (recommendBtn.disabled) return;
 
-        // transitionend 이벤트를 위한 단일하고 견고한 이벤트 리스너를 사용합니다.
-        const handleCalculation = function() {
-            if (bestComboTbody.style.opacity == 0) {
-                setTimeout(() => {
-                    const budget = +budgetInput.value;
-                    const maxItems = +maxItemsInput.value;
-                    const { am, stackBonus } = getScenarioBonus();
-                    
-                    const pinned = includeInputs.filter((item, idx) => pinInputs[idx].checked);
-                    const budgetLeft = budget - pinned.reduce((sum, i) => sum + getItemData(i).price, 0);
-                    const slotsLeft = maxItems - pinned.length;
-                    
-                    const optional = includeInputs.filter(i => { const el = i.closest('.item'); return !pinned.includes(i) && el && !el.dataset.fixedOnly && !i.disabled; });
+      recommendBtn.disabled = true;
+      const originalText = recommendBtn.textContent;
+      recommendBtn.textContent = '계산 중...';
+      bestComboTbody.style.opacity = 0;
 
-                    let best = { healOn: 0, combo: [] };
+      setTimeout(() => {
+        try {
+          const budget = Math.max(0, +budgetInput.value || 0);
+          const maxItems = Math.max(0, +maxItemsInput.value || 0);
+          const { am, stackBonus } = getScenarioBonus();
 
-                    function dfs(idx, currentCombo, currentPrice, currentWp, currentAspd, currentHasAm, currentHasAccelerator) {
-                        if (currentPrice > budgetLeft || currentCombo.length > slotsLeft) return;
+          const pinned = includeInputs.filter((input, idx) => pinInputs[idx].checked);
+          const pinnedStats = pinned.map(getEffectiveStats);
+          const pinnedCost = pinnedStats.reduce((sum, d) => sum + d.price, 0);
+          const pinnedWp = pinnedStats.reduce((sum, d) => sum + d.wp, 0);
+          const pinnedAs = pinnedStats.reduce((sum, d) => sum + d.as, 0);
+          const pinnedHasAm = pinnedStats.some(d => d.name === '아마리의 해독제');
+          const pinnedHasAccelerator = pinnedStats.some(d => d.name === '강화광 가속기');
 
-                        let totalWp = currentWp + pinned.reduce((s, i) => s + getItemData(i).wp, 0);
-                        let totalAspd = currentAspd + pinned.reduce((s, i) => s + getItemData(i).as, 0);
-                        let totalHasAmari = currentHasAm || pinned.some(i => getItemData(i).name === '아마리의 해독제');
-                        let totalHasAccelerator = currentHasAccelerator || pinned.some(i => getItemData(i).name === '강화광 가속기');
-                        
-                        if (totalHasAccelerator) {
-                            totalWp += stackBonus;
-                        }
+          const budgetLeft = budget - pinnedCost;
+          const slotsLeft = maxItems - pinned.length;
 
-                        let heal = baseHealing * (1 + totalWp / 100) * (1 + totalAspd / 100);
-                        if (totalHasAmari && lowHpInput.checked) {
-                            heal *= (1 + am / 100);
-                        }
+          if (budgetLeft < 0 || slotsLeft < 0) {
+            bestComboTbody.innerHTML = `<tr><td colspan="4">고정 아이템이 예산 또는 슬롯 제한을 초과했습니다.</td></tr>`;
+            calculate();
+            bestComboTbody.style.opacity = 1;
+            recommendBtn.disabled = false;
+            recommendBtn.textContent = originalText;
+            return;
+          }
 
-                        if (heal > best.healOn) {
-                            best = { healOn: heal, combo: currentCombo };
-                        }
+          const optional = includeInputs.filter(input => {
+            const itemEl = input.closest('.item');
+            return !pinned.includes(input) && itemEl && !itemEl.dataset.fixedOnly && !input.disabled;
+          });
+          const optionalData = optional.map(input => ({ input, stats: getEffectiveStats(input) }));
 
-                        if (idx === optional.length) return;
-
-                        // 현재 아이템을 제외합니다.
-                        dfs(idx + 1, currentCombo, currentPrice, currentWp, currentAspd, currentHasAm, currentHasAccelerator);
-                        // 현재 아이템을 포함합니다.
-                        const nextItem = optional[idx];
-                        const d = getItemData(nextItem);
-                        dfs(idx + 1, currentCombo.concat(nextItem), currentPrice + d.price, currentWp + d.wp, currentAspd + d.as, currentHasAm || d.name === '아마리의 해독제', currentHasAccelerator || d.name === '강화광 가속기');
-                    }
-                    
-                    dfs(0, [], 0, 0, 0, false, false);
-
-                    // 먼저 모든 체크박스를 초기화합니다.
-                    includeInputs.forEach(i => i.checked = false);
-                    // 고정된 아이템을 다시 체크합니다.
-                    pinned.forEach(i => {
-                        const index = includeInputs.indexOf(i);
-                        if(index !== -1) pinInputs[index].checked = true;
-                    });
-                    // 최적 조합의 아이템을 체크합니다.
-                    best.combo.forEach(i => {
-                        const index = includeInputs.indexOf(i);
-                        if(index !== -1) includeInputs[index].checked = true;
-                    });
-
-                    calculate();
-                    updateBestComboTable(pinned.concat(best.combo));
-                    saveState();
-                    
-                    bestComboTbody.style.opacity = 1;
-                    
-                    recommendBtn.disabled = false;
-                    recommendBtn.textContent = '최적 조합 추천';
-                }, 10);
+          function evaluateState(state) {
+            let totalWp = pinnedWp + state.wp;
+            let totalAs = pinnedAs + state.as;
+            const hasAmari = pinnedHasAm || state.hasAm;
+            const hasAccelerator = pinnedHasAccelerator || state.hasAccelerator;
+            if (hasAccelerator) totalWp += stackBonus;
+            let heal = baseHealing * (1 + totalWp / 100) * (1 + totalAs / 100);
+            if (hasAmari && lowHpInput.checked) {
+              heal *= (1 + am / 100);
             }
-            bestComboTbody.removeEventListener('transitionend', handleCalculation); // 실행 후 리스너를 제거합니다.
-        };
-        bestComboTbody.addEventListener('transitionend', handleCalculation);
+            return heal;
+          }
+
+          const dp = Array.from({ length: Math.max(slotsLeft, 0) + 1 }, () => new Map());
+          const initialState = { wp: 0, as: 0, hasAm: false, hasAccelerator: false, items: [] };
+          initialState.heal = evaluateState(initialState);
+          dp[0].set(0, initialState);
+
+          optionalData.forEach(({ input, stats }) => {
+            const maxCount = Math.min(slotsLeft - 1, dp.length - 2);
+            for (let count = maxCount; count >= 0; count--) {
+              const entries = Array.from(dp[count].entries());
+              entries.forEach(([cost, state]) => {
+                const newCost = cost + stats.price;
+                if (newCost > budgetLeft || count + 1 > slotsLeft) return;
+                const nextState = {
+                  wp: state.wp + stats.wp,
+                  as: state.as + stats.as,
+                  hasAm: state.hasAm || stats.name === '아마리의 해독제',
+                  hasAccelerator: state.hasAccelerator || stats.name === '강화광 가속기',
+                  items: state.items.concat(input)
+                };
+                nextState.heal = evaluateState(nextState);
+                const existing = dp[count + 1].get(newCost);
+                if (!existing || nextState.heal > existing.heal) {
+                  dp[count + 1].set(newCost, nextState);
+                }
+              });
+            }
+          });
+
+          let bestState = initialState;
+          for (let count = 0; count < dp.length; count++) {
+            dp[count].forEach(state => {
+              if (!bestState || state.heal > bestState.heal) {
+                bestState = state;
+              }
+            });
+          }
+
+          includeInputs.forEach(i => i.checked = false);
+          pinned.forEach(input => {
+            const index = includeInputs.indexOf(input);
+            if (index !== -1) {
+              pinInputs[index].checked = true;
+            }
+          });
+          (bestState.items || []).forEach(input => {
+            const index = includeInputs.indexOf(input);
+            if (index !== -1) {
+              includeInputs[index].checked = true;
+            }
+          });
+
+          calculate();
+          updateBestComboTable(pinned.concat(bestState.items || []));
+          saveState();
+
+          bestComboTbody.style.opacity = 1;
+          recommendBtn.disabled = false;
+          recommendBtn.textContent = originalText;
+        } catch (err) {
+          console.error(err);
+          bestComboTbody.innerHTML = `<tr><td colspan="4">계산 중 오류가 발생했습니다.</td></tr>`;
+          bestComboTbody.style.opacity = 1;
+          recommendBtn.disabled = false;
+          recommendBtn.textContent = originalText;
+        }
+      }, 10);
     }
 
     /** 추천 조합 테이블을 업데이트합니다. */
@@ -725,20 +1331,38 @@
         const color = getComputedStyle(document.documentElement).getPropertyValue(`--${cls}`);
         const pinEl = itemDiv.querySelector('.pin');
         const isPinned = !!(pinEl && pinEl.checked);
-        const d = getItemData(i);
-        let wpVal = d.wp;
-        if (d.name === '강화광 가속기') {
+        const base = getItemData(i);
+        const stats = getEffectiveStats(i);
+        let wpVal = stats.wp;
+        if (base.name === '강화광 가속기') {
           const hasAccelerator = combo.some(item => getItemData(item).name === '강화광 가속기');
           if (hasAccelerator) wpVal += stackBonus;
         }
-        const nameHtml = isPinned ? `<span title="고정 아이템" aria-label="고정 아이템" style="width:.55rem;height:.55rem;border-radius:50%;background:linear-gradient(135deg,#f1c40f,#f39c12);box-shadow:0 0 5px rgba(241,196,15,.35);display:inline-block;margin-right:.35rem;vertical-align:-1px;"></span>${d.name}` : d.name;
+        const nameHtml = isPinned ? `<span title="고정 아이템" aria-label="고정 아이템" style="width:.55rem;height:.55rem;border-radius:50%;background:linear-gradient(135deg,#f1c40f,#f39c12);box-shadow:0 0 5px rgba(241,196,15,.35);display:inline-block;margin-right:.35rem;vertical-align:-1px;"></span>${base.name}` : base.name;
         tr.innerHTML = `
           <td style="color:${color}; font-weight:bold;">${nameHtml}</td>
-          <td>${getItemData(i).price.toLocaleString()}</td>
+          <td>${stats.price.toLocaleString()}</td>
           <td>${wpVal}</td>
-          <td>${getItemData(i).as}</td>
+          <td>${stats.as}</td>
         `;
         bestComboTbody.appendChild(tr);
+      });
+    }
+
+    function activateTab(target) {
+      tabButtons.forEach(btn => {
+        const isActive = btn.dataset.tabTarget === target;
+        btn.classList.toggle('active', isActive);
+        btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
+      });
+      tabPanels.forEach(panel => {
+        const isActive = panel.dataset.tabPanel === target;
+        panel.classList.toggle('active', isActive);
+        if (isActive) {
+          panel.removeAttribute('hidden');
+        } else {
+          panel.setAttribute('hidden', '');
+        }
       });
     }
 
@@ -775,7 +1399,17 @@
         maxItemsInput.addEventListener('input', () => { triggerAutoRecommend(); saveState(); });
         lowHpInput.addEventListener('change', () => { triggerAutoRecommend(); saveState(); });
         stackRadios.forEach(radio => radio.addEventListener('change', () => { triggerAutoRecommend(); saveState(); }));
-        
+        if (conditionalToggle) {
+            conditionalToggle.addEventListener('change', () => { calculate(); triggerAutoRecommend(); saveState(); });
+        }
+        if (tabButtons.length) {
+            tabButtons.forEach(btn => btn.addEventListener('click', () => {
+                if (!btn.classList.contains('active')) {
+                    activateTab(btn.dataset.tabTarget);
+                }
+            }));
+        }
+
         // 아이템 체크박스 변경 시
         includeInputs.forEach(input => {
             input.addEventListener('change', () => {
