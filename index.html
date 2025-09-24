@@ -245,33 +245,78 @@
     .item-tab-panel.active { display: grid; }
     .item-list-content {
         display: grid;
-        gap: 0.9rem;
+        gap: 1.1rem;
         margin-top: 0;
-        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
         align-content: start;
     }
-    @media (min-width: 1280px) {
+    @media (min-width: 1440px) {
         .item-list-content {
-            grid-template-columns: repeat(3, minmax(0, 1fr));
+            grid-template-columns: repeat(4, minmax(0, 1fr));
         }
     }
     .item {
         position: relative;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 0.75rem;
-        border-radius: 8px;
-        border-left: 5px solid;
-        background-color: rgba(0,0,0,0.2);
-        transition: background-color 0.2s, opacity 0.2s ease;
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 0.85rem 1.1rem;
+        padding: 1.05rem 1.1rem 1.05rem 1.15rem;
+        border-radius: 14px;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        background: linear-gradient(135deg, rgba(15, 52, 96, 0.78), rgba(22, 33, 62, 0.65));
+        --item-glow: 0 12px 28px rgba(0, 0, 0, 0.45);
+        box-shadow: var(--item-glow);
+        transition: transform 0.18s ease, box-shadow 0.18s ease, opacity 0.18s ease;
+        overflow: hidden;
+    }
+    .item::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        background: linear-gradient(120deg, rgba(255, 255, 255, 0.08), transparent 60%);
+        opacity: 0.45;
+        pointer-events: none;
     }
     .item:hover {
-        background-color: var(--primary-color);
+        transform: translateY(-3px);
+        box-shadow: var(--item-glow), 0 16px 32px rgba(15, 52, 96, 0.45);
     }
-    .item.green { border-color: var(--green); }
-    .item.blue { border-color: var(--blue); }
-    .item.purple { border-color: var(--purple); }
+    .item.green { border-left: 6px solid var(--green); --item-glow: 0 12px 26px rgba(46, 204, 113, 0.18); }
+    .item.blue { border-left: 6px solid var(--blue); --item-glow: 0 12px 26px rgba(52, 152, 219, 0.18); }
+    .item.purple { border-left: 6px solid var(--purple); --item-glow: 0 12px 26px rgba(155, 89, 182, 0.18); }
+    .item:has(.include:checked) {
+        box-shadow: var(--item-glow), 0 0 0 1px rgba(233, 69, 96, 0.45), 0 0 20px rgba(233, 69, 96, 0.32);
+    }
+    .item:has(.pin:checked) {
+        box-shadow: var(--item-glow), 0 0 0 1px rgba(241, 196, 15, 0.55), 0 0 26px rgba(241, 196, 15, 0.4);
+    }
+    .item.green::after,
+    .item.blue::after,
+    .item.purple::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        opacity: 0.18;
+        pointer-events: none;
+    }
+    .item.green::after { background: radial-gradient(circle at top right, rgba(46,204,113,0.55), transparent 55%); }
+    .item.blue::after { background: radial-gradient(circle at top right, rgba(52,152,219,0.55), transparent 55%); }
+    .item.purple::after { background: radial-gradient(circle at top right, rgba(155,89,182,0.55), transparent 55%); }
+
+    @media (max-width: 640px) {
+        .item {
+            grid-template-columns: 1fr;
+            padding: 1rem;
+        }
+        .item-controls {
+            flex-direction: row;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            grid-row: auto;
+        }
+    }
 
     .item-visibility-toggle {
         position: absolute;
@@ -291,6 +336,7 @@
         opacity: 0;
         pointer-events: none;
         transition: opacity 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+        z-index: 2;
     }
     .item-visibility-toggle:hover {
         background: rgba(233, 69, 96, 0.45);
@@ -314,15 +360,73 @@
 
     .item-controls {
         display: flex;
-        gap: 1rem;
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: flex-start;
+        gap: 0.55rem;
+        grid-row: span 2;
+        z-index: 1;
     }
     .item-controls label {
         margin-bottom: 0;
-        font-size: 1.2rem;
+        font-size: 0.95rem;
+    }
+    .item-controls label.chip {
+        padding: 0.45rem 0.9rem;
+        font-size: 0.9rem;
+        letter-spacing: -0.01em;
+        background: rgba(15, 52, 96, 0.4);
+        border-color: rgba(255, 255, 255, 0.08);
+        box-shadow: 0 10px 16px rgba(0, 0, 0, 0.25);
+    }
+    .item-controls label.chip span {
+        font-weight: 600;
     }
     .item-label {
+        display: flex;
+        flex-direction: column;
+        gap: 0.45rem;
         font-weight: 500;
-        text-align: right;
+        text-align: left;
+        line-height: 1.45;
+        z-index: 1;
+    }
+    .item-label .item-name {
+        display: inline-flex;
+        align-items: baseline;
+        gap: 0.4rem;
+        font-weight: 700;
+        font-size: 1.05rem;
+        color: #ffffff;
+        text-shadow: 0 0 8px rgba(0, 0, 0, 0.35);
+    }
+    .item-label .item-price {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.1rem 0.5rem;
+        border-radius: 999px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        background: rgba(15, 52, 96, 0.55);
+        color: rgba(224, 224, 224, 0.9);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+    }
+    .item.green .item-label .item-price { color: rgba(214, 255, 227, 0.92); border-color: rgba(46, 204, 113, 0.35); background: rgba(46, 204, 113, 0.14); }
+    .item.blue .item-label .item-price { color: rgba(214, 235, 255, 0.92); border-color: rgba(52, 152, 219, 0.35); background: rgba(52, 152, 219, 0.16); }
+    .item.purple .item-label .item-price { color: rgba(238, 218, 255, 0.92); border-color: rgba(155, 89, 182, 0.35); background: rgba(155, 89, 182, 0.16); }
+    .item-label .item-stats {
+        font-size: 0.95rem;
+        color: rgba(224, 224, 224, 0.85);
+    }
+    .item-label .item-stats strong {
+        color: #ffffff;
+    }
+    .item-label small {
+        display: inline-block;
+        margin-top: 0.2rem;
+        font-size: 0.8rem;
+        color: rgba(255, 255, 255, 0.6);
     }
 
     /* 결과 & 테이블 */
@@ -384,10 +488,10 @@
     /* ---------- ITEM LIST: include/pin chips (pill buttons) ---------- */
     .item-list .item-controls { display:flex; flex-direction:column; align-items:flex-start; gap: .4rem; }
     .item-list .item-controls input[type="checkbox"]{ position:absolute; opacity:0; width:0; height:0; }
-    .item-list .item-controls label.chip{ display:inline-flex; align-items:center; gap:.35rem; padding:.5rem .82rem; border:1px solid var(--border-color); border-radius:999px; background:rgba(255,255,255,.04); color:var(--text-color); cursor:pointer; user-select:none; font-size:.95rem; line-height:1; white-space:nowrap; transition:background .2s ease, border-color .2s ease, box-shadow .2s ease, transform .05s ease; }
-    .item-list .item-controls label.chip:hover{ border-color:#3c4f7f; background:rgba(255,255,255,.06); }
-    .item-list .item-controls label.chip:active{ transform:scale(.98); }
-    .item-list .item-controls label.chip::before{ content:""; width:1rem; height:1rem; display:inline-block; background: #95a5b6; mask-size:contain; mask-repeat:no-repeat; mask-position:center; -webkit-mask-size:contain; -webkit-mask-repeat:no-repeat; -webkit-mask-position:center; }
+    .item-list .item-controls label.chip{ display:inline-flex; align-items:center; gap:.4rem; padding:.45rem .95rem; border:1px solid rgba(255,255,255,.12); border-radius:999px; background:rgba(12,26,54,.65); color:var(--text-color); cursor:pointer; user-select:none; font-size:.88rem; font-weight:600; line-height:1; white-space:nowrap; transition:background .2s ease, border-color .2s ease, box-shadow .2s ease, transform .05s ease; }
+    .item-list .item-controls label.chip:hover{ border-color:rgba(124,163,255,.55); background:rgba(33,56,102,.75); }
+    .item-list .item-controls label.chip:active{ transform:scale(.97); }
+    .item-list .item-controls label.chip::before{ content:""; width:.95rem; height:.95rem; display:inline-block; background: #95a5b6; mask-size:contain; mask-repeat:no-repeat; mask-position:center; -webkit-mask-size:contain; -webkit-mask-repeat:no-repeat; -webkit-mask-position:center; filter: drop-shadow(0 0 6px rgba(149,165,182,.5)); }
     /* include icon (check) */
     .item-list .item-controls label.include-chip::before{ mask-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="black" d="M9 16.2 4.8 12l-1.8 1.8L9 19.8 21 7.8 19.2 6z"/></svg>'); -webkit-mask-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='black' d='M9 16.2 4.8 12l-1.8 1.8L9 19.8 21 7.8 19.2 6z'/></svg>"); }
     /* pin icon (star) */
@@ -1317,10 +1421,39 @@
 
     /** 아이템 목록의 가격에 콤마를 추가합니다. */
     function formatItemPrices() {
-        document.querySelectorAll('.item-label').forEach(label => {
-            label.innerHTML = label.innerHTML.replace(/\((\d+)\)/g, (match, number) => {
-                return `(${parseInt(number, 10).toLocaleString()})`;
-            });
+        const escapeHtml = (str = '') => str.replace(/[&<>"']/g, ch => ({
+            "&": "&amp;",
+            "<": "&lt;",
+            ">": "&gt;",
+            "\"": "&quot;",
+            "'": "&#39;"
+        }[ch] || ch));
+        document.querySelectorAll('.item').forEach(item => {
+            const label = item.querySelector('.item-label');
+            if (!label) return;
+
+            const original = label.dataset.original ?? label.innerHTML;
+            label.dataset.original = original;
+
+            const segments = original.split('<br>');
+            const firstLine = (segments.shift() || '').trim();
+            const statsHtml = segments.join('<br>').trim();
+
+            const priceNumber = Number(item.dataset.price);
+            const hasValidPrice = Number.isFinite(priceNumber);
+            const formattedPrice = hasValidPrice ? priceNumber.toLocaleString() : '';
+
+            const fallbackMatch = firstLine.match(/\(([^)]+)\)/);
+            const priceDisplay = formattedPrice || (fallbackMatch ? fallbackMatch[1] : '');
+
+            const nameFromData = item.dataset.name ? escapeHtml(item.dataset.name) : '';
+            const nameFromLine = firstLine ? escapeHtml(firstLine.replace(/\s*\([^)]*\)\s*$/, '')) : '';
+            const safeName = nameFromData || nameFromLine;
+
+            const nameHtml = safeName ? `<span class="item-name">${safeName}${priceDisplay ? `<span class="item-price">(${priceDisplay})</span>` : ''}</span>` : firstLine;
+            const statsSection = statsHtml ? `<span class="item-stats">${statsHtml}</span>` : '';
+
+            label.innerHTML = `${nameHtml}${statsSection}`;
         });
     }
     // 고정 전용 아이템 강제 규칙 적용
