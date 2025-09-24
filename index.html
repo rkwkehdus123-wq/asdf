@@ -188,6 +188,28 @@
         justify-content: space-between;
         align-items: center;
         flex-wrap: wrap;
+        gap: 0.75rem;
+    }
+    .item-list-actions {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-left: auto;
+        flex-wrap: wrap;
+    }
+    #editItems {
+        background: rgba(233, 69, 96, 0.16);
+        border: 1px solid rgba(233, 69, 96, 0.35);
+        color: var(--text-color);
+    }
+    #editItems:hover:not(:disabled) {
+        background: rgba(233, 69, 96, 0.25);
+    }
+    .item-list.editing #editItems {
+        background: linear-gradient(135deg, #e94560 0%, #ff6b81 100%);
+        border-color: transparent;
+        color: #fff;
+        box-shadow: 0 0 14px rgba(233, 69, 96, 0.35);
     }
     .item-tabs {
         display: flex;
@@ -223,11 +245,18 @@
     .item-tab-panel.active { display: grid; }
     .item-list-content {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-        gap: 0.75rem;
+        gap: 0.9rem;
         margin-top: 0;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        align-content: start;
+    }
+    @media (min-width: 1280px) {
+        .item-list-content {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
     }
     .item {
+        position: relative;
         display: flex;
         justify-content: space-between;
         align-items: center;
@@ -235,7 +264,7 @@
         border-radius: 8px;
         border-left: 5px solid;
         background-color: rgba(0,0,0,0.2);
-        transition: background-color 0.2s;
+        transition: background-color 0.2s, opacity 0.2s ease;
     }
     .item:hover {
         background-color: var(--primary-color);
@@ -243,6 +272,45 @@
     .item.green { border-color: var(--green); }
     .item.blue { border-color: var(--blue); }
     .item.purple { border-color: var(--purple); }
+
+    .item-visibility-toggle {
+        position: absolute;
+        top: 0.45rem;
+        right: 0.45rem;
+        width: 2rem;
+        height: 2rem;
+        border-radius: 50%;
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        background: rgba(15, 52, 96, 0.45);
+        color: #fff;
+        font-size: 1rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+    }
+    .item-visibility-toggle:hover {
+        background: rgba(233, 69, 96, 0.45);
+        border-color: rgba(233, 69, 96, 0.65);
+    }
+    .item-visibility-toggle.is-hidden {
+        background: rgba(233, 69, 96, 0.3);
+        border-color: rgba(233, 69, 96, 0.5);
+    }
+    .item-list.editing .item-visibility-toggle {
+        opacity: 1;
+        pointer-events: auto;
+    }
+    .item--hidden {
+        opacity: 0.38;
+        filter: grayscale(55%);
+    }
+    .item--collapsed {
+        display: none !important;
+    }
 
     .item-controls {
         display: flex;
@@ -466,7 +534,12 @@
   </div>
 
   <div class="item-list">
-    <h2>아이템 목록 <small>(포함/고정 토글)</small> <button id="calcItems">선택 아이템 계산</button></h2>
+    <h2>아이템 목록 <small>(포함/고정 토글)</small>
+      <div class="item-list-actions">
+        <button id="editItems" type="button">아이템 목록 편집</button>
+        <button id="calcItems" type="button">선택 아이템 계산</button>
+      </div>
+    </h2>
 
     <div class="item-tabs" role="tablist" aria-label="아이템 분류">
       <button class="item-tab active" type="button" role="tab" aria-selected="true" data-tab-target="weapon">무기</button>
@@ -1023,6 +1096,9 @@
     const conditionalToggle = document.getElementById('chkConditional');
     const tabButtons = Array.from(document.querySelectorAll('.item-tab'));
     const tabPanels = Array.from(document.querySelectorAll('.item-tab-panel'));
+    const editItemsBtn = document.getElementById('editItems');
+    const itemListEl = document.querySelector('.item-list');
+    const itemCards = Array.from(document.querySelectorAll('.item-list .item'));
 
     const totalPriceEl = document.getElementById('totalPrice');
     const totalWPEl = document.getElementById('totalWP');
@@ -1033,6 +1109,8 @@
     // --- 상수 정의 ---
     const baseHealing = 60;
     let debounceTimer;
+    let hiddenItemNames = new Set();
+    let isEditingItems = false;
 
     includeInputs.forEach((input, idx) => {
       const data = getItemData(input);
@@ -1042,6 +1120,126 @@
       }
     });
 
+    function setupItemVisibilityControls() {
+      itemCards.forEach(item => {
+        if (item.querySelector('.item-visibility-toggle')) return;
+        const toggleBtn = document.createElement('button');
+        toggleBtn.type = 'button';
+        toggleBtn.className = 'item-visibility-toggle';
+        toggleBtn.textContent = '👁️';
+        const labelName = item.dataset.name || '아이템';
+        toggleBtn.title = '아이템 표시/숨김 전환';
+        toggleBtn.setAttribute('aria-label', `${labelName} 표시/숨김 전환`);
+        toggleBtn.addEventListener('click', (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          const willHide = item.dataset.hidden === 'true' ? false : true;
+          setItemHiddenState(item, willHide);
+          calculate();
+          triggerAutoRecommend();
+          saveState();
+        });
+        item.insertAdjacentElement('afterbegin', toggleBtn);
+      });
+    }
+
+    function syncItemDisplay(item) {
+      const isHidden = item.dataset.hidden === 'true';
+      if (isEditingItems) {
+        item.classList.remove('item--collapsed');
+        item.classList.toggle('item--hidden', isHidden);
+      } else {
+        item.classList.remove('item--hidden');
+        item.classList.toggle('item--collapsed', isHidden);
+      }
+      const toggleBtn = item.querySelector('.item-visibility-toggle');
+      if (toggleBtn) {
+        toggleBtn.setAttribute('aria-pressed', isHidden ? 'true' : 'false');
+        toggleBtn.classList.toggle('is-hidden', isHidden);
+      }
+    }
+
+    function setItemHiddenState(item, hidden) {
+      if (!item) return;
+      const name = item.dataset.name || '';
+      if (hidden) {
+        if (name) hiddenItemNames.add(name);
+      } else if (name) {
+        hiddenItemNames.delete(name);
+      }
+      const currentlyHidden = item.dataset.hidden === 'true';
+      item.dataset.hidden = hidden ? 'true' : 'false';
+      if (hidden === currentlyHidden) {
+        syncItemDisplay(item);
+        return;
+      }
+      const include = item.querySelector('input.include');
+      const pin = item.querySelector('input.pin');
+      if (hidden) {
+        if (include) {
+          include.dataset.prevDisabled = include.disabled ? 'true' : 'false';
+          include.checked = false;
+          include.disabled = true;
+        }
+        if (pin) {
+          pin.dataset.prevDisabled = pin.disabled ? 'true' : 'false';
+          pin.checked = false;
+          pin.disabled = true;
+        }
+      } else {
+        if (include && include.dataset.prevDisabled != null) {
+          include.disabled = include.dataset.prevDisabled === 'true';
+        }
+        if (pin && pin.dataset.prevDisabled != null) {
+          pin.disabled = pin.dataset.prevDisabled === 'true';
+        }
+      }
+      syncItemDisplay(item);
+    }
+
+    function refreshItemVisibility() {
+      itemCards.forEach(syncItemDisplay);
+    }
+
+    function applyHiddenStateFromStorage() {
+      itemCards.forEach(item => {
+        const name = item.dataset.name || '';
+        const shouldHide = name ? hiddenItemNames.has(name) : false;
+        setItemHiddenState(item, shouldHide);
+      });
+      refreshItemVisibility();
+    }
+
+    function enterEditMode() {
+      if (!itemListEl) return;
+      isEditingItems = true;
+      itemListEl.classList.add('editing');
+      if (editItemsBtn) {
+        editItemsBtn.textContent = '편집 완료';
+        editItemsBtn.setAttribute('aria-pressed', 'true');
+      }
+      refreshItemVisibility();
+    }
+
+    function exitEditMode() {
+      if (!itemListEl) return;
+      isEditingItems = false;
+      itemListEl.classList.remove('editing');
+      if (editItemsBtn) {
+        editItemsBtn.textContent = '아이템 목록 편집';
+        editItemsBtn.setAttribute('aria-pressed', 'false');
+      }
+      refreshItemVisibility();
+    }
+
+    function toggleEditMode() {
+      if (isEditingItems) {
+        exitEditMode();
+      } else {
+        enterEditMode();
+      }
+    }
+
     // --- 상태 저장(LocalStorage) ---
     const STORAGE_KEY = 'mercy_heal_calc_v1';
 
@@ -1050,6 +1248,10 @@
         const includes = includeInputs.filter(i => i.checked).map(i => i.dataset.name).filter(Boolean);
         const pins = pinInputs.map((p, idx) => p.checked ? includeInputs[idx].dataset.name : null).filter(Boolean);
         const stackSel = document.querySelector('input[name="stack"]:checked');
+        const hiddenItems = itemCards
+          .filter(item => item.dataset.hidden === 'true')
+          .map(item => item.dataset.name)
+          .filter(Boolean);
         const data = {
           budget: +budgetInput.value || 0,
           maxItems: +maxItemsInput.value || 6,
@@ -1058,6 +1260,7 @@
           includes,
           pins,
           conditional: !!(conditionalToggle && conditionalToggle.checked),
+          hiddenItems,
         };
         localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
       } catch (e) { /* noop */ }
@@ -1086,12 +1289,18 @@
         if (Array.isArray(data.pins)) {
           pinInputs.forEach((p, idx) => { if (data.pins.includes(includeInputs[idx].dataset.name)) p.checked = true; });
         }
+        if (Array.isArray(data.hiddenItems)) {
+          hiddenItemNames = new Set(data.hiddenItems);
+        } else {
+          hiddenItemNames = new Set();
+        }
       } catch (e) { /* noop */ }
     }
 
     // --- 초기화 함수 ---
     function initialize() {
         formatItemPrices();
+        setupItemVisibilityControls();
         addEventListeners();
         if (tabButtons.length) {
             const defaultTab = document.querySelector('.item-tab.active') || tabButtons[0];
@@ -1101,6 +1310,8 @@
         }
         loadState();
         enforceFixedOnlyRules();
+        applyHiddenStateFromStorage();
+        exitEditMode();
         calculate(); // 초기 로드 시 계산
     }
 
@@ -1386,7 +1597,10 @@
     function addEventListeners() {
         calcItemsBtn.addEventListener('click', calculate);
         recommendBtn.addEventListener('click', recommend);
-        
+        if (editItemsBtn) {
+            editItemsBtn.addEventListener('click', toggleEditMode);
+        }
+
         // 보유 재화 입력칸 클릭 시 전체 선택
         budgetInput.addEventListener('click', () => {
             budgetInput.select();
