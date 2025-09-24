@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>메르시 힐량 계산기 & 최적 조합 추천</title>
+  <!-- SEO: basic + OpenGraph + Twitter -->
+  <link rel="canonical" href="https://majestic-cocada-b2c63d.netlify.app/">
+  <meta name="description" content="오버워치 스타디움용 메르시 힐량 계산기 &amp; 최적 조합 추천. 예산·아이템·시나리오에 따라 HPS를 자동으로 최대화합니다.">
+  <meta name="robots" content="index,follow">
+  
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="메르시 힐량 계산기 &amp; 최적 조합 추천">
+  <meta property="og:description" content="예산과 아이템으로 HPS 최적화! 아마리/강화광 시나리오 반영, 즉시 계산.">
+  <meta property="og:url" content="https://majestic-cocada-b2c63d.netlify.app/">
+  <meta property="og:image" content="https://majestic-cocada-b2c63d.netlify.app/og.png">
+  
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="메르시 힐량 계산기 &amp; 최적 조합 추천">
+  <meta name="twitter:description" content="스타디움 메르시 유저를 위한 HPS 최적화 계산기.">
+  <meta name="twitter:image" content="https://majestic-cocada-b2c63d.netlify.app/og.png">
+  
+  <!-- 구조화 데이터(JSON-LD) -->
+  <script type="application/ld+json">{
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "메르시 힐량 계산기 & 최적 조합 추천",
+    "url": "https://majestic-cocada-b2c63d.netlify.app/",
+    "applicationCategory": "UtilitiesApplication",
+    "operatingSystem": "Web",
+    "description": "오버워치 스타디움용 메르시 힐량 계산기. 예산/아이템/시나리오로 HPS를 극대화합니다.",
+    "offers": {"@type": "Offer", "price": "0", "priceCurrency": "KRW"}
+  }</script>
+  <style>
+    /* 폰트 및 기본 스타일 */
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap');
+
+    :root {
+        --bg-color: #1a1a2e;
+        --card-bg: #16213e;
+        --primary-color: #0f3460;
+        --secondary-color: #e94560;
+        --text-color: #e0e0e0;
+        --border-color: #2a3a5e;
+        --green: #2ecc71;
+        --blue: #3498db;
+        --purple: #9b59b6;
+    }
+
+    body {
+        font-family: 'Noto Sans KR', sans-serif;
+        background-color: var(--bg-color);
+        color: var(--text-color);
+        margin: 0;
+        padding: 1rem;
+        line-height: 1.6;
+    }
+
+    /* 레이아웃 */
+    .container {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+        max-width: 1400px;
+        margin: auto;
+    }
+
+    /* 데스크탑 화면에서 그리드 레이아웃 적용 */
+    @media (min-width: 1024px) {
+        .container {
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-areas:
+                "header header header"
+                "controls scenario results"
+                "items items items";
+        }
+        h1 { grid-area: header; }
+        .controls { grid-area: controls; }
+        .scenario { grid-area: scenario; }
+        .item-list { grid-area: items; }
+        .results { grid-area: results; }
+    }
+
+    /* 공통 요소 */
+    h1, h2, h3 {
+        color: var(--secondary-color);
+        border-bottom: 2px solid var(--primary-color);
+        padding-bottom: 0.5rem;
+        margin-top: 0;
+    }
+    h1 {
+        text-align: center;
+        font-size: 2.2rem;
+        margin-bottom: 1.5rem;
+    }
+    h2 {
+      font-size: 1.4rem;
+    }
+    h2 small {
+      font-size: 0.9rem;
+      color: var(--text-color);
+    }
+
+    /* 카드 스타일 섹션 */
+    .controls, .scenario, .item-list, .results {
+        background-color: var(--card-bg);
+        padding: 1.5rem;
+        border-radius: 12px;
+        border: 1px solid var(--border-color);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        display: flex;
+        flex-direction: column;
+    }
+
+    /* 버튼 */
+    button {
+        background-color: var(--secondary-color);
+        color: white;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: bold;
+        transition: background-color 0.3s ease, transform 0.2s ease;
+        font-family: 'Noto Sans KR', sans-serif;
+        font-size: 1rem;
+    }
+    button:hover:not(:disabled) {
+        background-color: #ff6b81;
+        transform: translateY(-2px);
+    }
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    #recommend {
+        width: 100%;
+        margin-top: 1rem;
+    }
+
+    /* 입력 필드 & 라벨 */
+    label {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 0.5rem;
+        cursor: pointer;
+    }
+    input[type="number"] {
+        background-color: var(--bg-color);
+        color: var(--text-color);
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        padding: 0.5rem;
+        width: 80px;
+        font-size: 1rem;
+    }
+    input[type="checkbox"], input[type="radio"] {
+        accent-color: var(--secondary-color);
+        width: 1.3em;
+        height: 1.3em;
+        cursor: pointer;
+    }
+
+    /* 시나리오 섹션 */
+    .scenario-content {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+        margin-top: 1rem;
+    }
+    #toggleScenario {
+        background: none;
+        color: var(--text-color);
+        padding: 0.2rem 0.5rem;
+        align-self: flex-end; /* 오른쪽 정렬 */
+        margin-bottom: -1rem; /* 콘텐츠와의 간격 조절 */
+    }
+    .scen-item label {
+      font-size: 0.9rem;
+    }
+
+    /* 아이템 목록 */
+    .item-list h2 {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+    .item-list-content {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 0.75rem;
+        margin-top: 1rem;
+    }
+    .item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.75rem;
+        border-radius: 8px;
+        border-left: 5px solid;
+        background-color: rgba(0,0,0,0.2);
+        transition: background-color 0.2s;
+    }
+    .item:hover {
+        background-color: var(--primary-color);
+    }
+    .item.green { border-color: var(--green); }
+    .item.blue { border-color: var(--blue); }
+    .item.purple { border-color: var(--purple); }
+
+    .item-controls {
+        display: flex;
+        gap: 1rem;
+    }
+    .item-controls label {
+        margin-bottom: 0;
+        font-size: 1.2rem;
+    }
+    .item-label {
+        font-weight: 500;
+        text-align: right;
+    }
+
+    /* 결과 & 테이블 */
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 1rem;
+    }
+    th, td {
+        padding: 0.75rem;
+        text-align: left;
+        border-bottom: 1px solid var(--border-color);
+    }
+    th {
+        color: var(--secondary-color);
+    }
+    #bestCombo {
+        font-weight: bold;
+        /* 부드러운 전환 효과를 위한 transition 추가 */
+        transition: opacity 0.25s ease-in-out;
+    }
+    #totalPrice, #totalWP, #totalAS { font-size: 1.2rem; font-weight: 700; color: #ffffff; text-shadow: none; }
+    /* 강조 스타일: 예상 힐량 하이라이트 */
+    .healing-row { background: none; }
+    .healing-row th, .healing-row td { border-bottom: none; padding-top: 0.5rem; padding-bottom: 0.5rem; }
+    #healing {
+      font-size: 2.4rem;
+      font-weight: 900;
+      color: #ffffff;
+      /* 텍스트 그림자를 더 부드럽게 변경 */
+      text-shadow: 0 0 10px rgba(255, 107, 129, 0.7);
+      white-space: nowrap;
+      line-height: 1;
+      display: inline-flex;
+      align-items: center;
+      padding: 0.18rem 0.6rem 0.26rem 0.6rem;
+      margin-right: 0.35rem;
+      /* 은은한 대각선 그라데이션 추가 */
+      background-image: linear-gradient(135deg, #e94560 0%, #ff6b81 100%);
+      border-radius: 14px;
+      /* 테두리를 반투명하게 하여 부드러운 느낌 강조 */
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      /* 박스 그림자를 더 넓고 부드럽게 변경 */
+      box-shadow: 0 4px 20px rgba(233, 69, 96, 0.35), inset 0 1px 1px rgba(255, 255, 255, 0.15);
+      transition: all 0.3s ease; /* 부드러운 전환 효과 */
+    }
+    .healing-unit { opacity: 0.95; white-space: nowrap; }
+    /* 결과 표는 항상 한 줄로 표시 */
+    .results table th, .results table td { white-space: nowrap; }
+    @media (max-width: 480px) { #healing { font-size: 2rem; padding: 0.14rem 0.5rem 0.22rem 0.5rem; } }
+  
+    /* =============================
+       THEME-CONSISTENT FORM CONTROLS
+       ============================= */
+
+    /* Focus ring for keyboard users */
+    :where(input,button):focus-visible { outline: 2px solid var(--secondary-color); outline-offset: 2px; }
+
+    /* ---------- ITEM LIST: include/pin chips (pill buttons) ---------- */
+    .item-list .item-controls { display:flex; flex-direction:column; align-items:flex-start; gap: .4rem; }
+    .item-list .item-controls input[type="checkbox"]{ position:absolute; opacity:0; width:0; height:0; }
+    .item-list .item-controls label.chip{ display:inline-flex; align-items:center; gap:.35rem; padding:.5rem .82rem; border:1px solid var(--border-color); border-radius:999px; background:rgba(255,255,255,.04); color:var(--text-color); cursor:pointer; user-select:none; font-size:.95rem; line-height:1; white-space:nowrap; transition:background .2s ease, border-color .2s ease, box-shadow .2s ease, transform .05s ease; }
+    .item-list .item-controls label.chip:hover{ border-color:#3c4f7f; background:rgba(255,255,255,.06); }
+    .item-list .item-controls label.chip:active{ transform:scale(.98); }
+    .item-list .item-controls label.chip::before{ content:""; width:1rem; height:1rem; display:inline-block; background: #95a5b6; mask-size:contain; mask-repeat:no-repeat; mask-position:center; -webkit-mask-size:contain; -webkit-mask-repeat:no-repeat; -webkit-mask-position:center; }
+    /* include icon (check) */
+    .item-list .item-controls label.include-chip::before{ mask-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="black" d="M9 16.2 4.8 12l-1.8 1.8L9 19.8 21 7.8 19.2 6z"/></svg>'); -webkit-mask-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='black' d='M9 16.2 4.8 12l-1.8 1.8L9 19.8 21 7.8 19.2 6z'/></svg>"); }
+    /* pin icon (star) */
+    .item-list .item-controls label.pin-chip::before{ mask-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="black" d="m12 17.3-5.56 3.27 1.48-6.36L3 9.97l6.56-.56L12 3.5l2.44 5.91 6.56.56-4.92 4.24 1.48 6.36z"/></svg>'); -webkit-mask-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='black' d='m12 17.3-5.56 3.27 1.48-6.36L3 9.97l6.56-.56L12 3.5l2.44 5.91 6.56.56-4.92 4.24 1.48 6.36z'/></svg>"); }
+    /* checked state */
+    /* per-type checked states */
+    .item-list .item-controls label.include-chip:has(input:checked){ background: linear-gradient(135deg, #e94560 0%, #ff6b81 100%); border-color: transparent; color:#fff; box-shadow: 0 0 12px rgba(233,69,96,.35); }
+    .item-list .item-controls label.include-chip:has(input:checked)::before{ background:#fff; }
+    .item-list .item-controls label.pin-chip:has(input:checked){ background: linear-gradient(135deg, #f1c40f 0%, #f39c12 100%); border-color: rgba(241,196,15,.85); color:#1a1a2e; box-shadow: 0 0 14px rgba(241,196,15,.45), 0 0 28px rgba(241,196,15,.25); }
+    .item-list .item-controls label.pin-chip:has(input:checked)::before{ background:#1a1a2e; }
+    .item-list .item-controls label.chip:has(input:checked)::before{ background:#fff; }
+
+    /* ---------- SCENARIO: radio group as pills ---------- */
+    .stack-scenarios .scen-item { display: inline-block; }
+    .stack-scenarios .scen-item input[type="radio"] { position: absolute; opacity: 0; width: 0; height: 0; }
+    .stack-scenarios .scen-item input[type="radio"] + label {
+      display: inline-block; margin: .25rem .35rem .25rem 0; padding: .4rem .8rem;
+      border: 1px solid var(--border-color); border-radius: 999px;
+      background: rgba(255,255,255,0.04); color: var(--text-color);
+      transition: background .2s ease, border-color .2s ease, transform .05s ease, box-shadow .2s ease;
+      cursor: pointer; user-select: none; font-size: .95rem;
+    }
+    .stack-scenarios .scen-item input[type="radio"] + label:hover {
+      border-color: rgba(233,69,96,0.55); background: rgba(233,69,96,0.08);
+    }
+    .stack-scenarios .scen-item input[type="radio"]:focus-visible + label { box-shadow: 0 0 0 3px rgba(233,69,96,0.35); }
+    .stack-scenarios .scen-item input[type="radio"]:checked + label {
+      color: #fff; border-color: rgba(233,69,96,0.65);
+      background: linear-gradient(135deg, #e94560 0%, #ff6b81 100%);
+      box-shadow: 0 6px 18px rgba(0,0,0,0.35), 0 0 0 2px rgba(233,69,96,0.22) inset;
+    }
+
+    /* ---------- SCENARIO: low-HP switch ---------- */
+    .am-scenarios .scen-item { position: relative; }
+    .am-scenarios .scen-item input[type="checkbox"] { position: absolute; opacity: 0; width: 0; height: 0; }
+    .am-scenarios .scen-item input[type="checkbox"] + label {
+      position: relative; padding-left: 3.2rem; min-height: 1.6rem; display: inline-flex; align-items: center;
+    }
+    .am-scenarios .scen-item input[type="checkbox"] + label::before {
+      content: ""; position: absolute; left: 0; top: 50%; transform: translateY(-50%);
+      width: 2.6rem; height: 1.4rem; border-radius: 999px;
+      background: #0b1530; border: 1px solid var(--border-color);
+      box-shadow: inset 0 2px 6px rgba(0,0,0,.5);
+      transition: background .2s ease, border-color .2s ease, box-shadow .2s ease;
+    }
+    .am-scenarios .scen-item input[type="checkbox"] + label::after {
+      content: ""; position: absolute; left: .18rem; top: 50%; transform: translateY(-50%);
+      width: 1.05rem; height: 1.05rem; border-radius: 50%;
+      background: #233449; box-shadow: 0 2px 4px rgba(0,0,0,.4);
+      transition: left .22s ease, background .2s ease;
+    }
+    .am-scenarios .scen-item input[type="checkbox"]:checked + label::before {
+      background: linear-gradient(135deg, #e94560 0%, #ff6b81 100%); border-color: transparent;
+      box-shadow: 0 0 12px rgba(233,69,96,0.35) inset;
+    }
+    .am-scenarios .scen-item input[type="checkbox"]:checked + label::after { left: 1.35rem; background: #fff; }
+
+    /* Ghost style for scenario toggler */
+    #toggleScenario { border: 1px solid var(--border-color); border-radius: 999px; }
+    #toggleScenario:hover { border-color: #3c4f7f; }
+
+  
+    /* ---------- LAYOUT: radio pills as responsive flex rows (2 columns) ---------- */
+    .stack-scenarios { display: flex; flex-wrap: wrap; gap: .6rem; align-items: stretch; }
+    .stack-scenarios .scen-item { display: block; flex: 1 1 calc(50% - .3rem); }
+    @media (max-width: 560px) { .stack-scenarios .scen-item { flex-basis: 100%; } }
+    .stack-scenarios .scen-item input[type="radio"] + label {
+      display: flex; align-items: center; justify-content: center; width: 100%;
+      margin: 0; min-height: 42px; /* equal height for pills */
+    }
+
+  
+    /* ---------- LAYOUT FIX: header span for flex ---------- */
+    .stack-scenarios > h3 { flex: 0 0 100%; margin-bottom: .25rem; }
+    .stack-scenarios > .scen-item { margin: 0; }
+
+  
+    /* === OVERRIDE: 강화광 가속기 라디오 정렬 (2열 그리드, 겹침 방지) === */
+    .stack-scenarios{ display:grid !important; grid-template-columns:repeat(2, minmax(0,1fr)); gap:.6rem; align-items:stretch; }
+    .stack-scenarios>h3{ grid-column:1 / -1; margin-bottom:.25rem; }
+    .stack-scenarios .scen-item{ display:block !important; }
+    .stack-scenarios .scen-item input[type="radio"] + label{ display:flex !important; align-items:center; justify-content:center; width:100%; margin:0; min-height:44px; box-sizing:border-box; padding:.6rem .9rem; }
+    @media (max-width:560px){ .stack-scenarios{ grid-template-columns:1fr; } }
+
+  
+    /* ---- Micro interactions & responsive enhancements ---- */
+    @keyframes pop { 0% { transform: scale(.98); } 100% { transform: scale(1); } }
+    .stack-scenarios .scen-item input[type="radio"]:checked + label { animation: pop 120ms ease-out; }
+    .item-list .item-controls input[type="checkbox"]:checked { animation: pop 120ms ease-out; }
+    @media (min-width:1280px) { .stack-scenarios { grid-template-columns: repeat(2, minmax(0,1fr)); } }
+
+    /* Tooltip(help) */
+    .am-scenarios .scen-item label .help { display:inline-flex; align-items:center; justify-content:center; width:1.05rem; height:1.05rem; margin-left:.35rem; border-radius:50%; border:1px solid var(--border-color); background:rgba(255,255,255,.06); font-weight:700; font-size:.78rem; line-height:1; cursor:help; }
+
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>메르시 힐량 계산기 & 최적 조합 추천</h1>
+  
+  <div class="controls">
+    <h2>기본 설정</h2>
+    <label>보유 재화: <input type="number" id="budget" value="20000" min="0" step="1"></label>
+    <label>아이템 수: <input type="number" id="maxItems" value="6" min="1" max="12"></label>
+    <button id="recommend">최적 조합 추천</button>
+  </div>
+
+  <div class="scenario">
+    <button id="toggleScenario">▼ 접기</button>
+    <h2>시나리오 설정</h2>
+    <div class="scenario-content">
+      <div class="am-scenarios">
+        <h3>아마리 해독제</h3>
+        <div class="scen-item"><input type="checkbox" id="chkLowHp"><label for="chkLowHp">저체력 회복 (HP&lt;50%, 무기 치유량 +15%)<span class="help" title="HP 50% 미만일 때 메르시 무기 치유량에 +15%가 곱연산으로 추가됩니다.">?</span></label></div>
+      </div>
+      <div class="stack-scenarios">
+        <h3>강화광 가속기</h3>
+        <div class="scen-item"><input type="radio" name="stack" value="stack0" id="stack-none" checked><label for="stack-none">중첩 없음 (+0% 무공)</label></div>
+        <div class="scen-item"><input type="radio" name="stack" value="stack1" id="stack1"><label for="stack1">1중첩 (+5% 무공)</label></div>
+        <div class="scen-item"><input type="radio" name="stack" value="stack2" id="stack2"><label for="stack2">2중첩 (+10% 무공)</label></div>
+        <div class="scen-item"><input type="radio" name="stack" value="stack3" id="stack3"><label for="stack3">3중첩 (+15% 무공)</label></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="results">
+    <h3>추천 조합</h3>
+    <table>
+      <thead><tr><th>아이템</th><th>가격</th><th>무공%</th><th>공속%</th></tr></thead>
+      <tbody id="bestCombo"><tr><td colspan="4">추천 버튼을 눌러주세요</td></tr></tbody>
+    </table>
+    
+    <h2 style="margin-top: 1.5rem;">결과 요약</h2>
+    <table>
+      <tr class="healing-row"><th>예상 힐량</th><td><span id="healing">60.0</span></td><th class="healing-unit">hps</th></tr>
+      <tr><th>총 비용</th><td id="totalPrice">0</td><th>재화</th></tr>
+      <tr><th>총 무공</th><td id="totalWP">0</td><th>%</th></tr>
+      <tr><th>총 공속</th><td id="totalAS">0</td><th>%</th></tr>
+    </table>
+  </div>
+
+  <div class="item-list">
+    <h2>아이템 목록 <small>(포함/고정 토글)</small> <button id="calcItems">선택 아이템 계산</button></h2>
+    <div class="item-list-content">
+      <!-- 1,000 -->
+      <div class="item green" id="item-무기기름칠" data-name="무기 기름칠" data-price="1000" data-wp="0" data-as="5"><div class="item-controls"><label title="포함" class="chip include-chip"><input type="checkbox" class="include"><span>포함</span></label><label title="고정" class="chip pin-chip"><input type="checkbox" class="pin"><span>고정</span></label></div><span class="item-label">무기 기름칠 (1,000)<br>공속+5%</span></div>
+      <div class="item green" id="item-보정기" data-name="보정기" data-price="1000" data-wp="5" data-as="0"><div class="item-controls"><label title="포함" class="chip include-chip"><input type="checkbox" class="include"><span>포함</span></label><label title="고정" class="chip pin-chip"><input type="checkbox" class="pin"><span>고정</span></label></div><span class="item-label">보정기 (1,000)<br>무공+5%</span></div>
+      <!-- 3,750 -->
+      <div class="item blue" id="item-부품시장발사핀" data-name="부품 시장 발사 핀" data-price="3750" data-wp="0" data-as="10"><div class="item-controls"><label title="포함" class="chip include-chip"><input type="checkbox" class="include"><span>포함</span></label><label title="고정" class="chip pin-chip"><input type="checkbox" class="pin"><span>고정</span></label></div><span class="item-label">부품 시장 발사 핀 (3,750)<br>공속+10%</span></div>
+      <!-- 4,000 -->
+      <div class="item blue" id="item-고급나노생물학" data-name="고급 나노생물학" data-price="4000" data-wp="5" data-as="10"><div class="item-controls"><label title="포함" class="chip include-chip"><input type="checkbox" class="include"><span>포함</span></label><label title="고정" class="chip pin-chip"><input type="checkbox" class="pin"><span>고정</span></label></div><span class="item-label">고급 나노생물학 (4,000)<br>무공+5%, 공속+10%</span></div>
+      <div class="item blue" id="item-공중기동기" data-name="공중 기동기" data-price="4000" data-wp="5" data-as="10" data-fixed-only="true"><div class="item-controls"><label title="포함" class="chip include-chip"><input type="checkbox" class="include"><span>포함</span></label><label title="고정" class="chip pin-chip"><input type="checkbox" class="pin"><span>고정</span></label></div><span class="item-label">공중 기동기 (4,000)<br>무공+5%, 공속+10%(고정 전용)</span></div>
+      <!-- 5,500 -->
+      <div class="item blue" id="item-차가운냉각수" data-name="차가운 냉각수" data-price="5500" data-wp="10" data-as="0"><div class="item-controls"><label title="포함" class="chip include-chip"><input type="checkbox" class="include"><span>포함</span></label><label title="고정" class="chip pin-chip"><input type="checkbox" class="pin"><span>고정</span></label></div><span class="item-label">차가운 냉각수 (5,500)<br>무공+10%</span></div>
+      <!-- 6,000 -->
+      <div class="item blue" id="item-탈론개조모듈" data-name="탈론 개조 모듈" data-price="6000" data-wp="15" data-as="0"><div class="item-controls"><label title="포함" class="chip include-chip"><input type="checkbox" class="include"><span>포함</span></label><label title="고정" class="chip pin-chip"><input type="checkbox" class="pin"><span>고정</span></label></div><span class="item-label">탈론 개조 모듈 (6,000)<br>무공+15%</span></div>
+      <!-- 9,000 -->
+      <div class="item purple" id="item-코드브레이커" data-name="코드브레이커" data-price="9000" data-wp="15" data-as="0"><div class="item-controls"><label title="포함" class="chip include-chip"><input type="checkbox" class="include"><span>포함</span></label><label title="고정" class="chip pin-chip"><input type="checkbox" class="pin"><span>고정</span></label></div><span class="item-label">코드브레이커 (9,000)<br>무공+15%</span></div>
+      <!-- 9,500 -->
+       <div class="item purple" id="item-오버드라이브핵" data-name="오버드라이브 핵" data-price="9500" data-wp="10" data-as="0"><div class="item-controls"><label title="포함" class="chip include-chip"><input type="checkbox" class="include"><span>포함</span></label><label title="고정" class="chip pin-chip"><input type="checkbox" class="pin"><span>고정</span></label></div><span class="item-label">오버드라이브 핵 (9,500)<br>무공+10%</span></div>
+      <!-- 10,000 -->
+      <div class="item purple" id="item-카두세우스연장기" data-name="카두세우스 연장기" data-price="10000" data-wp="10" data-as="0"><div class="item-controls"><label title="포함" class="chip include-chip"><input type="checkbox" class="include"><span>포함</span></label><label title="고정" class="chip pin-chip"><input type="checkbox" class="pin"><span>고정</span></label></div><span class="item-label">카두세우스 연장기 (10,000)<br>무공+10%</span></div>
+      <!-- 11,000 -->
+      <div class="item purple" id="item-강화광가속기" data-name="강화광 가속기" data-price="11000" data-wp="10" data-as="0"><div class="item-controls"><label title="포함" class="chip include-chip"><input type="checkbox" class="include"><span>포함</span></label><label title="고정" class="chip pin-chip"><input type="checkbox" class="pin"><span>고정</span></label></div><span class="item-label">강화광 가속기 (11,000)<br>무공+10%</span></div>
+      <div class="item purple" id="item-성운전도" data-name="성운전도" data-price="11000" data-wp="5" data-as="0"><div class="item-controls"><label title="포함" class="chip include-chip"><input type="checkbox" class="include"><span>포함</span></label><label title="고정" class="chip pin-chip"><input type="checkbox" class="pin"><span>고정</span></label></div><span class="item-label">성운전도 (11,000)<br>무공+5%</span></div>
+      <div class="item purple" id="item-부스터제트" data-name="부스터 제트" data-price="11000" data-wp="0" data-as="20"><div class="item-controls"><label title="포함" class="chip include-chip"><input type="checkbox" class="include"><span>포함</span></label><label title="고정" class="chip pin-chip"><input type="checkbox" class="pin"><span>고정</span></label></div><span class="item-label">부스터 제트 (11,000)<br>공속+20%</span></div>
+      <div class="item purple" id="item-아마리해독제" data-name="아마리의 해독제" data-price="11000" data-wp="15" data-as="0"><div class="item-controls"><label title="포함" class="chip include-chip"><input type="checkbox" class="include"><span>포함</span></label><label title="고정" class="chip pin-chip"><input type="checkbox" class="pin"><span>고정</span></label></div><span class="item-label">아마리의 해독제 (11,000)<br>무공+15% (HP&lt;50%)</span></div>
+      <!-- 14,000 -->
+      <div class="item purple" id="item-거미의눈" data-name="거미의 눈" data-price="14000" data-wp="25" data-as="0"><div class="item-controls"><label title="포함" class="chip include-chip"><input type="checkbox" class="include"><span>포함</span></label><label title="고정" class="chip pin-chip"><input type="checkbox" class="pin"><span>고정</span></label></div><span class="item-label">거미의 눈 (14,000)<br>무공+25%</span></div>
+      <!-- 14,500 -->
+      <div class="item purple" id="item-종결자" data-name="종결자" data-price="14500" data-wp="20" data-as="0"><div class="item-controls"><label title="포함" class="chip include-chip"><input type="checkbox" class="include"><span>포함</span></label><label title="고정" class="chip pin-chip"><input type="checkbox" class="pin"><span>고정</span></label></div><span class="item-label">종결자 (14,500)<br>무공+20%</span></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    // --- 요소 가져오기 ---
+    const budgetInput = document.getElementById('budget');
+    const maxItemsInput = document.getElementById('maxItems');
+    const recommendBtn = document.getElementById('recommend');
+    const calcItemsBtn = document.getElementById('calcItems');
+    const toggleScenarioBtn = document.getElementById('toggleScenario');
+    const scenarioContent = document.querySelector('.scenario-content');
+    
+    const includeInputs = Array.from(document.querySelectorAll('.include'));
+    const pinInputs = Array.from(document.querySelectorAll('.pin'));
+    const lowHpInput = document.getElementById('chkLowHp');
+    const stackRadios = document.querySelectorAll('input[name="stack"]');
+
+    const totalPriceEl = document.getElementById('totalPrice');
+    const totalWPEl = document.getElementById('totalWP');
+    const totalASEl = document.getElementById('totalAS');
+    const healingEl = document.getElementById('healing');
+    const bestComboTbody = document.getElementById('bestCombo');
+
+    // --- 상수 정의 ---
+    const baseHealing = 60;
+    let debounceTimer;
+
+    // --- 상태 저장(LocalStorage) ---
+    const STORAGE_KEY = 'mercy_heal_calc_v1';
+
+    function saveState() {
+      try {
+        const includes = includeInputs.filter(i => i.checked).map(i => i.dataset.name);
+        const pins = pinInputs.map((p, idx) => p.checked ? includeInputs[idx].dataset.name : null).filter(Boolean);
+        const stackSel = document.querySelector('input[name="stack"]:checked');
+        const data = {
+          budget: +budgetInput.value || 0,
+          maxItems: +maxItemsInput.value || 6,
+          lowHp: !!lowHpInput.checked,
+          stackId: stackSel ? stackSel.id : 'stack-none',
+          includes,
+          pins,
+        };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      } catch (e) { /* noop */ }
+    }
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return;
+        const data = JSON.parse(raw);
+        if (data.budget != null) budgetInput.value = data.budget;
+        if (data.maxItems != null) maxItemsInput.value = data.maxItems;
+        if (typeof data.lowHp === 'boolean') lowHpInput.checked = data.lowHp;
+        if (data.stackId) {
+          const r = document.getElementById(data.stackId);
+          if (r) r.checked = true;
+        }
+        includeInputs.forEach(i => i.checked = false);
+        pinInputs.forEach(p => p.checked = false);
+        if (Array.isArray(data.includes)) {
+          includeInputs.forEach(i => { if (data.includes.includes(i.dataset.name)) i.checked = true; });
+        }
+        if (Array.isArray(data.pins)) {
+          pinInputs.forEach((p, idx) => { if (data.pins.includes(includeInputs[idx].dataset.name)) p.checked = true; });
+        }
+      } catch (e) { /* noop */ }
+    }
+
+    // --- 초기화 함수 ---
+    function initialize() {
+        formatItemPrices();
+        addEventListeners();
+        loadState();
+        enforceFixedOnlyRules();
+        calculate(); // 초기 로드 시 계산
+    }
+
+    /** 아이템 목록의 가격에 콤마를 추가합니다. */
+    function formatItemPrices() {
+        document.querySelectorAll('.item-label').forEach(label => {
+            label.innerHTML = label.innerHTML.replace(/\((\d+)\)/g, (match, number) => {
+                return `(${parseInt(number, 10).toLocaleString()})`;
+            });
+        });
+    }
+    // 고정 전용 아이템 강제 규칙 적용
+    function enforceFixedOnlyRules() {
+      document.querySelectorAll('.item[data-fixed-only="true"]').forEach(itemEl => {
+        const include = itemEl.querySelector('input.include');
+        if (include) {
+          include.checked = false;
+          include.disabled = true;
+          const chip = include.closest('label.chip');
+          if (chip) chip.title = '고정 전용: 추천/포함 불가, 고정만 사용';
+        }
+      });
+    }
+
+    // --- 함수 정의 ---
+
+    /** 주어진 포함 체크박스에서 아이템 데이터를 읽어옵니다 (부모 .item의 data-* 사용) */
+    function getItemData(inputEl){
+      const itemEl = inputEl.closest('.item');
+      if(!itemEl) return { name:'', price:0, wp:0, as:0 };
+      const name = itemEl.dataset.name || '';
+      const price = +(itemEl.dataset.price || 0);
+      const wp = +(itemEl.dataset.wp || 0);
+      const as = +(itemEl.dataset.as || 0);
+      return { name, price, wp, as };
+    }
+
+    /** 시나리오에 따른 보너스 무공 값을 가져옵니다. */
+    function getScenarioBonus() {
+      let am = 0, stackBonus = 0;
+      if (lowHpInput.checked) am = 15;
+      const stackSel = document.querySelector('input[name="stack"]:checked');
+      if (stackSel) {
+        if (stackSel.id === 'stack1') stackBonus = 5;
+        if (stackSel.id === 'stack2') stackBonus = 10;
+        if (stackSel.id === 'stack3') stackBonus = 15;
+      }
+      return { am, stackBonus };
+    }
+
+    /** 현재 선택된 아이템 기준으로 능력치를 계산하고 화면에 표시합니다. */
+    function calculate() {
+      const { am, stackBonus } = getScenarioBonus();
+      let totalPrice = 0, wp = 0, aspd = 0;
+      let hasAmari = false;
+      let hasAccelerator = false;
+
+      includeInputs.forEach((input, idx) => {
+        if (input.checked || pinInputs[idx].checked) {
+          const d = getItemData(input);
+          totalPrice += d.price;
+          wp += d.wp;
+          aspd += d.as;
+          if (d.name === '강화광 가속기') hasAccelerator = true;
+          if (d.name === '아마리의 해독제') hasAmari = true;
+        }
+      });
+      
+      if (hasAccelerator) {
+        wp += stackBonus;
+      }
+
+      let healOn = baseHealing * (1 + wp / 100) * (1 + aspd / 100);
+      const healOff = healOn; // 이 변수는 현재 로직에서 화면 표시에 사용되지 않지만, 일관성을 위해 유지합니다.
+      if (hasAmari && lowHpInput.checked) {
+        healOn *= (1 + am / 100);
+      }
+      totalPriceEl.textContent = totalPrice.toLocaleString();
+      totalWPEl.textContent = wp;
+      totalASEl.textContent = aspd;
+      if (hasAmari && lowHpInput.checked) {
+        healingEl.textContent = `${healOn.toFixed(1)} (${healOff.toFixed(1)})`;
+      } else {
+        healingEl.textContent = healOn.toFixed(1);
+      }
+    }
+
+    /** 예산과 아이템 수에 맞는 최적의 조합을 추천합니다. */
+    function recommend() {
+        if (recommendBtn.disabled) return; // 중복 실행 방지
+        
+        recommendBtn.disabled = true;
+        recommendBtn.textContent = '계산 중...';
+        
+        bestComboTbody.style.opacity = 0;
+
+        // transitionend 이벤트를 위한 단일하고 견고한 이벤트 리스너를 사용합니다.
+        const handleCalculation = function() {
+            if (bestComboTbody.style.opacity == 0) {
+                setTimeout(() => {
+                    const budget = +budgetInput.value;
+                    const maxItems = +maxItemsInput.value;
+                    const { am, stackBonus } = getScenarioBonus();
+                    
+                    const pinned = includeInputs.filter((item, idx) => pinInputs[idx].checked);
+                    const budgetLeft = budget - pinned.reduce((sum, i) => sum + getItemData(i).price, 0);
+                    const slotsLeft = maxItems - pinned.length;
+                    
+                    const optional = includeInputs.filter(i => { const el = i.closest('.item'); return !pinned.includes(i) && el && !el.dataset.fixedOnly && !i.disabled; });
+
+                    let best = { healOn: 0, combo: [] };
+
+                    function dfs(idx, currentCombo, currentPrice, currentWp, currentAspd, currentHasAm, currentHasAccelerator) {
+                        if (currentPrice > budgetLeft || currentCombo.length > slotsLeft) return;
+
+                        let totalWp = currentWp + pinned.reduce((s, i) => s + getItemData(i).wp, 0);
+                        let totalAspd = currentAspd + pinned.reduce((s, i) => s + getItemData(i).as, 0);
+                        let totalHasAmari = currentHasAm || pinned.some(i => getItemData(i).name === '아마리의 해독제');
+                        let totalHasAccelerator = currentHasAccelerator || pinned.some(i => getItemData(i).name === '강화광 가속기');
+                        
+                        if (totalHasAccelerator) {
+                            totalWp += stackBonus;
+                        }
+
+                        let heal = baseHealing * (1 + totalWp / 100) * (1 + totalAspd / 100);
+                        if (totalHasAmari && lowHpInput.checked) {
+                            heal *= (1 + am / 100);
+                        }
+
+                        if (heal > best.healOn) {
+                            best = { healOn: heal, combo: currentCombo };
+                        }
+
+                        if (idx === optional.length) return;
+
+                        // 현재 아이템을 제외합니다.
+                        dfs(idx + 1, currentCombo, currentPrice, currentWp, currentAspd, currentHasAm, currentHasAccelerator);
+                        // 현재 아이템을 포함합니다.
+                        const nextItem = optional[idx];
+                        const d = getItemData(nextItem);
+                        dfs(idx + 1, currentCombo.concat(nextItem), currentPrice + d.price, currentWp + d.wp, currentAspd + d.as, currentHasAm || d.name === '아마리의 해독제', currentHasAccelerator || d.name === '강화광 가속기');
+                    }
+                    
+                    dfs(0, [], 0, 0, 0, false, false);
+
+                    // 먼저 모든 체크박스를 초기화합니다.
+                    includeInputs.forEach(i => i.checked = false);
+                    // 고정된 아이템을 다시 체크합니다.
+                    pinned.forEach(i => {
+                        const index = includeInputs.indexOf(i);
+                        if(index !== -1) pinInputs[index].checked = true;
+                    });
+                    // 최적 조합의 아이템을 체크합니다.
+                    best.combo.forEach(i => {
+                        const index = includeInputs.indexOf(i);
+                        if(index !== -1) includeInputs[index].checked = true;
+                    });
+
+                    calculate();
+                    updateBestComboTable(pinned.concat(best.combo));
+                    saveState();
+                    
+                    bestComboTbody.style.opacity = 1;
+                    
+                    recommendBtn.disabled = false;
+                    recommendBtn.textContent = '최적 조합 추천';
+                }, 10);
+            }
+            bestComboTbody.removeEventListener('transitionend', handleCalculation); // 실행 후 리스너를 제거합니다.
+        };
+        bestComboTbody.addEventListener('transitionend', handleCalculation);
+    }
+
+    /** 추천 조합 테이블을 업데이트합니다. */
+    function updateBestComboTable(combo) {
+      const { stackBonus } = getScenarioBonus();
+      bestComboTbody.innerHTML = '';
+      if (combo.length === 0) {
+        bestComboTbody.innerHTML = `<tr><td colspan="4">조건에 맞는 조합이 없습니다.</td></tr>`;
+        return;
+      }
+      combo.forEach(i => {
+        const tr = document.createElement('tr');
+        const itemDiv = i.closest('.item');
+        const cls = itemDiv.classList.contains('green') ? 'green' : itemDiv.classList.contains('blue') ? 'blue' : 'purple';
+        const color = getComputedStyle(document.documentElement).getPropertyValue(`--${cls}`);
+        const pinEl = itemDiv.querySelector('.pin');
+        const isPinned = !!(pinEl && pinEl.checked);
+        const d = getItemData(i);
+        let wpVal = d.wp;
+        if (d.name === '강화광 가속기') {
+          const hasAccelerator = combo.some(item => getItemData(item).name === '강화광 가속기');
+          if (hasAccelerator) wpVal += stackBonus;
+        }
+        const nameHtml = isPinned ? `<span title="고정 아이템" aria-label="고정 아이템" style="width:.55rem;height:.55rem;border-radius:50%;background:linear-gradient(135deg,#f1c40f,#f39c12);box-shadow:0 0 5px rgba(241,196,15,.35);display:inline-block;margin-right:.35rem;vertical-align:-1px;"></span>${d.name}` : d.name;
+        tr.innerHTML = `
+          <td style="color:${color}; font-weight:bold;">${nameHtml}</td>
+          <td>${getItemData(i).price.toLocaleString()}</td>
+          <td>${wpVal}</td>
+          <td>${getItemData(i).as}</td>
+        `;
+        bestComboTbody.appendChild(tr);
+      });
+    }
+
+    /** 자동 추천을 위한 디바운스 핸들러 */
+    function triggerAutoRecommend() {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(recommend, 500);
+    }
+
+    /** 모든 이벤트 리스너를 등록합니다. */
+    function addEventListeners() {
+        calcItemsBtn.addEventListener('click', calculate);
+        recommendBtn.addEventListener('click', recommend);
+        
+        // 보유 재화 입력칸 클릭 시 전체 선택
+        budgetInput.addEventListener('click', () => {
+            budgetInput.select();
+        });
+
+        // 최대 아이템 수 입력칸 클릭 시 전체 선택
+        maxItemsInput.addEventListener('click', () => {
+            maxItemsInput.select();
+        });
+
+        budgetInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                recommend();
+            }
+        });
+
+        // 설정 변경 시 자동으로 추천 기능 실행
+        budgetInput.addEventListener('input', () => { triggerAutoRecommend(); saveState(); });
+        maxItemsInput.addEventListener('input', () => { triggerAutoRecommend(); saveState(); });
+        lowHpInput.addEventListener('change', () => { triggerAutoRecommend(); saveState(); });
+        stackRadios.forEach(radio => radio.addEventListener('change', () => { triggerAutoRecommend(); saveState(); }));
+        
+        // 아이템 체크박스 변경 시
+        includeInputs.forEach(input => {
+            input.addEventListener('change', () => {
+                // 아마리 해독제 연동
+                if (input.dataset.name === '아마리의 해독제') {
+                    lowHpInput.checked = input.checked;
+                }
+                calculate(); saveState(); // 모든 체크박스 변경 시 즉시 계산
+            });
+        });
+        pinInputs.forEach(pin => pin.addEventListener('change', () => { triggerAutoRecommend(); saveState(); }));
+
+        toggleScenarioBtn.addEventListener('click', () => {
+            const isHidden = scenarioContent.style.display === 'none';
+            scenarioContent.style.display = isHidden ? '' : 'none';
+            toggleScenarioBtn.textContent = isHidden ? '▼ 접기' : '▲ 펼치기';
+        });
+        window.addEventListener('beforeunload', saveState);
+    }
+
+    // 페이지 로드 완료 후 실행
+    initialize();
+  });
+</script>
+</body>
+</html>
