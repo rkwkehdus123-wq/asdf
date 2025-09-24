@@ -445,8 +445,12 @@
     }
     #bestCombo {
         font-weight: bold;
-        /* 부드러운 전환 효과를 위한 transition 추가 */
-        transition: opacity 0.25s ease-in-out;
+        opacity: 1;
+        /* 추천 조합 변경 시 부드러운 페이드 전환 */
+        transition: opacity 0.8s ease;
+    }
+    #bestCombo.is-fading-out {
+        opacity: 0;
     }
     #totalPrice, #totalWP, #totalAS { font-size: 1.2rem; font-weight: 700; color: #ffffff; text-shadow: none; }
     /* 강조 스타일: 예상 힐량 하이라이트 */
@@ -691,6 +695,75 @@
     const healingEl = document.getElementById('healing');
     const bestComboTbody = document.getElementById('bestCombo');
 
+    let bestComboFadeTimeoutId = null;
+    let bestComboFadeHandler = null;
+    let isBestComboTransitionActive = false;
+
+    function updateBestComboContentWithFade(updateFn) {
+      if (typeof updateFn !== 'function') return;
+      if (!bestComboTbody) {
+        updateFn();
+        return;
+      }
+
+      const prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (prefersReducedMotion) {
+        bestComboTbody.classList.remove('is-fading-out');
+        updateFn();
+        return;
+      }
+
+      if (bestComboFadeHandler) {
+        bestComboTbody.removeEventListener('transitionend', bestComboFadeHandler);
+        bestComboFadeHandler = null;
+      }
+      if (bestComboFadeTimeoutId != null) {
+        clearTimeout(bestComboFadeTimeoutId);
+        bestComboFadeTimeoutId = null;
+      }
+
+      const finalize = () => {
+        if (!isBestComboTransitionActive) return;
+        isBestComboTransitionActive = false;
+        if (bestComboFadeHandler) {
+          bestComboTbody.removeEventListener('transitionend', bestComboFadeHandler);
+          bestComboFadeHandler = null;
+        }
+        if (bestComboFadeTimeoutId != null) {
+          clearTimeout(bestComboFadeTimeoutId);
+          bestComboFadeTimeoutId = null;
+        }
+        try {
+          updateFn();
+        } catch (err) {
+          console.error(err);
+        }
+        requestAnimationFrame(() => {
+          bestComboTbody.classList.remove('is-fading-out');
+        });
+      };
+
+      bestComboFadeHandler = (event) => {
+        if (event.target === bestComboTbody && event.propertyName === 'opacity') {
+          finalize();
+        }
+      };
+
+      bestComboTbody.addEventListener('transitionend', bestComboFadeHandler);
+      bestComboFadeTimeoutId = window.setTimeout(finalize, 850);
+      isBestComboTransitionActive = true;
+
+      bestComboTbody.classList.remove('is-fading-out');
+      void bestComboTbody.offsetWidth;
+      bestComboTbody.classList.add('is-fading-out');
+    }
+
+    function renderBestComboMessage(message) {
+      updateBestComboContentWithFade(() => {
+        bestComboTbody.innerHTML = `<tr><td colspan="4">${message}</td></tr>`;
+      });
+    }
+
     const itemData = {
       weapon: [
         { name: '무기 기름칠', price: 1000, wp: 0, as: 5, rarity: 'green', description: '공속+5%' },
@@ -901,27 +974,6 @@
       if (hidden === currentlyHidden) {
         syncItemDisplay(item);
         return;
-      }
-      const include = item.querySelector('input.include');
-      const pin = item.querySelector('input.pin');
-      if (hidden) {
-        if (include) {
-          include.dataset.prevDisabled = include.disabled ? 'true' : 'false';
-          include.checked = false;
-          include.disabled = true;
-        }
-        if (pin) {
-          pin.dataset.prevDisabled = pin.disabled ? 'true' : 'false';
-          pin.checked = false;
-          pin.disabled = true;
-        }
-      } else {
-        if (include && include.dataset.prevDisabled != null) {
-          include.disabled = include.dataset.prevDisabled === 'true';
-        }
-        if (pin && pin.dataset.prevDisabled != null) {
-          pin.disabled = pin.dataset.prevDisabled === 'true';
-        }
       }
       syncItemDisplay(item);
     }
@@ -1180,7 +1232,6 @@
       recommendBtn.disabled = true;
       const originalText = recommendBtn.textContent;
       recommendBtn.textContent = '계산 중...';
-      bestComboTbody.style.opacity = 0;
 
       setTimeout(() => {
         try {
@@ -1200,9 +1251,8 @@
           const slotsLeft = maxItems - pinned.length;
 
           if (budgetLeft < 0 || slotsLeft < 0) {
-            bestComboTbody.innerHTML = `<tr><td colspan="4">고정 아이템이 예산 또는 슬롯 제한을 초과했습니다.</td></tr>`;
+            renderBestComboMessage('고정 아이템이 예산 또는 슬롯 제한을 초과했습니다.');
             calculate();
-            bestComboTbody.style.opacity = 1;
             recommendBtn.disabled = false;
             recommendBtn.textContent = originalText;
             return;
@@ -1282,13 +1332,11 @@
           updateBestComboTable(pinned.concat(bestState.items || []));
           saveState();
 
-          bestComboTbody.style.opacity = 1;
           recommendBtn.disabled = false;
           recommendBtn.textContent = originalText;
         } catch (err) {
           console.error(err);
-          bestComboTbody.innerHTML = `<tr><td colspan="4">계산 중 오류가 발생했습니다.</td></tr>`;
-          bestComboTbody.style.opacity = 1;
+          renderBestComboMessage('계산 중 오류가 발생했습니다.');
           recommendBtn.disabled = false;
           recommendBtn.textContent = originalText;
         }
@@ -1297,34 +1345,37 @@
 
     /** 추천 조합 테이블을 업데이트합니다. */
     function updateBestComboTable(combo) {
-      const { stackBonus } = getScenarioBonus();
-      bestComboTbody.innerHTML = '';
-      if (combo.length === 0) {
-        bestComboTbody.innerHTML = `<tr><td colspan="4">조건에 맞는 조합이 없습니다.</td></tr>`;
-        return;
-      }
-      combo.forEach(i => {
-        const tr = document.createElement('tr');
-        const itemDiv = i.closest('.item');
-        const cls = itemDiv.classList.contains('green') ? 'green' : itemDiv.classList.contains('blue') ? 'blue' : 'purple';
-        const color = getComputedStyle(document.documentElement).getPropertyValue(`--${cls}`);
-        const pinEl = itemDiv.querySelector('.pin');
-        const isPinned = !!(pinEl && pinEl.checked);
-        const base = getItemData(i);
-        const stats = getEffectiveStats(i);
-        let wpVal = stats.wp;
-        if (base.name === '강화광 가속기') {
-          const hasAccelerator = combo.some(item => getItemData(item).name === '강화광 가속기');
-          if (hasAccelerator) wpVal += stackBonus;
+      const comboList = Array.isArray(combo) ? combo : [];
+      updateBestComboContentWithFade(() => {
+        const { stackBonus } = getScenarioBonus();
+        bestComboTbody.innerHTML = '';
+        if (comboList.length === 0) {
+          bestComboTbody.innerHTML = `<tr><td colspan="4">조건에 맞는 조합이 없습니다.</td></tr>`;
+          return;
         }
-        const nameHtml = isPinned ? `<span title="고정 아이템" aria-label="고정 아이템" style="width:.55rem;height:.55rem;border-radius:50%;background:linear-gradient(135deg,#f1c40f,#f39c12);box-shadow:0 0 5px rgba(241,196,15,.35);display:inline-block;margin-right:.35rem;vertical-align:-1px;"></span>${base.name}` : base.name;
-        tr.innerHTML = `
-          <td style="color:${color}; font-weight:bold;">${nameHtml}</td>
-          <td>${stats.price.toLocaleString()}</td>
-          <td>${wpVal}</td>
-          <td>${stats.as}</td>
-        `;
-        bestComboTbody.appendChild(tr);
+        comboList.forEach(i => {
+          const tr = document.createElement('tr');
+          const itemDiv = i.closest('.item');
+          const cls = itemDiv.classList.contains('green') ? 'green' : itemDiv.classList.contains('blue') ? 'blue' : 'purple';
+          const color = getComputedStyle(document.documentElement).getPropertyValue(`--${cls}`);
+          const pinEl = itemDiv.querySelector('.pin');
+          const isPinned = !!(pinEl && pinEl.checked);
+          const base = getItemData(i);
+          const stats = getEffectiveStats(i);
+          let wpVal = stats.wp;
+          if (base.name === '강화광 가속기') {
+            const hasAccelerator = comboList.some(item => getItemData(item).name === '강화광 가속기');
+            if (hasAccelerator) wpVal += stackBonus;
+          }
+          const nameHtml = isPinned ? `<span title="고정 아이템" aria-label="고정 아이템" style="width:.55rem;height:.55rem;border-radius:50%;background:linear-gradient(135deg,#f1c40f,#f39c12);box-shadow:0 0 5px rgba(241,196,15,.35);display:inline-block;margin-right:.35rem;vertical-align:-1px;"></span>${base.name}` : base.name;
+          tr.innerHTML = `
+            <td style="color:${color}; font-weight:bold;">${nameHtml}</td>
+            <td>${stats.price.toLocaleString()}</td>
+            <td>${wpVal}</td>
+            <td>${stats.as}</td>
+          `;
+          bestComboTbody.appendChild(tr);
+        });
       });
     }
 
