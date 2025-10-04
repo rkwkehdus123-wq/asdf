@@ -1276,37 +1276,61 @@
           const dp = Array.from({ length: Math.max(slotsLeft, 0) + 1 }, () => new Map());
           const initialState = { wp: 0, as: 0, hasAm: false, hasAccelerator: false, items: [] };
           initialState.heal = evaluateState(initialState);
-          dp[0].set(0, initialState);
+          const EPSILON = 1e-9;
+
+          function stateDominates(a, b) {
+            if (a.heal + EPSILON < b.heal) return false;
+            if (a.wp < b.wp) return false;
+            if (a.as < b.as) return false;
+            if (b.hasAm && !a.hasAm) return false;
+            if (b.hasAccelerator && !a.hasAccelerator) return false;
+            return true;
+          }
+
+          function insertState(map, cost, state) {
+            const list = map.get(cost) || [];
+            for (const existing of list) {
+              if (stateDominates(existing, state)) {
+                return;
+              }
+            }
+            const filtered = list.filter(existing => !stateDominates(state, existing));
+            filtered.push(state);
+            map.set(cost, filtered);
+          }
+
+          insertState(dp[0], 0, initialState);
 
           optionalData.forEach(({ input, stats }) => {
             const maxCount = Math.min(slotsLeft - 1, dp.length - 2);
             for (let count = maxCount; count >= 0; count--) {
               const entries = Array.from(dp[count].entries());
-              entries.forEach(([cost, state]) => {
-                const newCost = cost + stats.price;
-                if (newCost > budgetLeft || count + 1 > slotsLeft) return;
-                const nextState = {
-                  wp: state.wp + stats.wp,
-                  as: state.as + stats.as,
-                  hasAm: state.hasAm || stats.name === '아마리의 해독제',
-                  hasAccelerator: state.hasAccelerator || stats.name === '강화광 가속기',
-                  items: state.items.concat(input)
-                };
-                nextState.heal = evaluateState(nextState);
-                const existing = dp[count + 1].get(newCost);
-                if (!existing || nextState.heal > existing.heal) {
-                  dp[count + 1].set(newCost, nextState);
-                }
+              entries.forEach(([cost, states]) => {
+                states.forEach(state => {
+                  const newCost = cost + stats.price;
+                  if (newCost > budgetLeft || count + 1 > slotsLeft) return;
+                  const nextState = {
+                    wp: state.wp + stats.wp,
+                    as: state.as + stats.as,
+                    hasAm: state.hasAm || stats.name === '아마리의 해독제',
+                    hasAccelerator: state.hasAccelerator || stats.name === '강화광 가속기',
+                    items: state.items.concat(input)
+                  };
+                  nextState.heal = evaluateState(nextState);
+                  insertState(dp[count + 1], newCost, nextState);
+                });
               });
             }
           });
 
           let bestState = initialState;
           for (let count = 0; count < dp.length; count++) {
-            dp[count].forEach(state => {
-              if (!bestState || state.heal > bestState.heal) {
-                bestState = state;
-              }
+            dp[count].forEach(states => {
+              states.forEach(state => {
+                if (!bestState || state.heal > bestState.heal) {
+                  bestState = state;
+                }
+              });
             });
           }
 
