@@ -11,14 +11,14 @@
   
   <!-- Open Graph -->
   <meta property="og:type" content="website">
-  <meta property="og:title" content="메르시 힐량 계산기 &amp; 최적 조합 추천">
+  <meta property="og:title" content="메르시 힐량 계산기 & 최적 조합 추천">
   <meta property="og:description" content="예산과 아이템으로 HPS 최적화! 아마리/강화광 시나리오 반영, 즉시 계산.">
   <meta property="og:url" content="https://majestic-cocada-b2c63d.netlify.app/">
   <meta property="og:image" content="https://majestic-cocada-b2c63d.netlify.app/og.png">
   
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="메르시 힐량 계산기 &amp; 최적 조합 추천">
+  <meta name="twitter:title" content="메르시 힐량 계산기 & 최적 조합 추천">
   <meta name="twitter:description" content="스타디움 메르시 유저를 위한 HPS 최적화 계산기.">
   <meta name="twitter:image" content="https://majestic-cocada-b2c63d.netlify.app/og.png">
   
@@ -148,15 +148,17 @@
         margin-bottom: 0.5rem;
         cursor: pointer;
     }
-    input[type="number"] {
+    input[type="number"], input[type="search"] {
         background-color: var(--bg-color);
         color: var(--text-color);
         border: 1px solid var(--border-color);
         border-radius: 6px;
         padding: 0.5rem;
-        width: 80px;
         font-size: 1rem;
     }
+    input[type="number"] { width: 80px; }
+    input[type="search"] { flex-grow: 1; max-width: 250px; }
+
     input[type="checkbox"], input[type="radio"] {
         accent-color: var(--secondary-color);
         width: 1.3em;
@@ -211,38 +213,18 @@
         color: #fff;
         box-shadow: 0 0 14px rgba(233, 69, 96, 0.35);
     }
-    .item-tabs {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.5rem;
-        margin-top: 1rem;
+    .item-category {
+      margin-top: 2rem;
     }
-    .item-tabs .item-tab {
-        background: rgba(255, 255, 255, 0.04);
-        color: var(--text-color);
-        border: 1px solid var(--border-color);
-        border-radius: 999px;
-        padding: 0.45rem 1rem;
-        font-size: 0.95rem;
-        font-weight: 500;
-        cursor: pointer;
-        transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
-        transform: none;
+    .item-category:first-child {
+      margin-top: 1rem;
     }
-    .item-tabs .item-tab:hover:not(.active) {
-        background: rgba(255, 255, 255, 0.08);
-        border-color: #3c4f7f;
-        transform: none;
+    .item-category h3 {
+      font-size: 1.6rem;
+      color: var(--text-color);
+      border-bottom-color: var(--secondary-color);
+      margin-bottom: 1.2rem;
     }
-    .item-tabs .item-tab.active {
-        background: linear-gradient(135deg, #0f3460 0%, #1f4d8a 100%);
-        color: #ffffff;
-        border-color: transparent;
-        box-shadow: 0 8px 18px rgba(15, 52, 96, 0.35);
-    }
-    .item-tab-panels { margin-top: 1rem; }
-    .item-tab-panel { display: none; }
-    .item-tab-panel.active { display: grid; }
     .item-list-content {
         display: grid;
         gap: 1.1rem;
@@ -266,7 +248,7 @@
         background: linear-gradient(135deg, rgba(15, 52, 96, 0.78), rgba(22, 33, 62, 0.65));
         --item-glow: 0 12px 28px rgba(0, 0, 0, 0.45);
         box-shadow: var(--item-glow);
-        transition: transform 0.18s ease, box-shadow 0.18s ease, opacity 0.18s ease;
+        transition: transform 0.18s ease, box-shadow 0.18s ease, opacity 0.18s ease, order 0.3s ease;
         overflow: hidden;
     }
     .item::before {
@@ -419,8 +401,13 @@
         font-size: 0.95rem;
         color: rgba(224, 224, 224, 0.85);
     }
-    .item-label .item-stats strong {
+    .item-label .item-stats .stat-highlight {
         color: #ffffff;
+        font-weight: 600;
+        background: rgba(255, 255, 255, 0.07);
+        padding: 0.1em 0.35em;
+        border-radius: 5px;
+        margin: 0 0.1em;
     }
     .item-label small {
         display: inline-block;
@@ -443,14 +430,11 @@
     th {
         color: var(--secondary-color);
     }
-    #bestCombo {
-        font-weight: bold;
-        opacity: 1;
-        /* 추천 조합 변경 시 부드러운 페이드 전환 */
-        transition: opacity 0.8s ease;
+    #bestCombo, #totalPrice, #totalWP, #totalAS, #healing {
+      transition: opacity 0.3s ease;
     }
-    #bestCombo.is-fading-out {
-        opacity: 0;
+    .is-fading-out {
+        opacity: 0 !important;
     }
     #totalPrice, #totalWP, #totalAS { font-size: 1.2rem; font-weight: 700; color: #ffffff; text-shadow: none; }
     /* 강조 스타일: 예상 힐량 하이라이트 */
@@ -460,7 +444,6 @@
       font-size: 2.4rem;
       font-weight: 900;
       color: #ffffff;
-      /* 텍스트 그림자를 더 부드럽게 변경 */
       text-shadow: 0 0 10px rgba(255, 107, 129, 0.7);
       white-space: nowrap;
       line-height: 1;
@@ -468,14 +451,11 @@
       align-items: center;
       padding: 0.18rem 0.6rem 0.26rem 0.6rem;
       margin-right: 0.35rem;
-      /* 은은한 대각선 그라데이션 추가 */
       background-image: linear-gradient(135deg, #e94560 0%, #ff6b81 100%);
       border-radius: 14px;
-      /* 테두리를 반투명하게 하여 부드러운 느낌 강조 */
       border: 1px solid rgba(255, 255, 255, 0.2);
-      /* 박스 그림자를 더 넓고 부드럽게 변경 */
       box-shadow: 0 4px 20px rgba(233, 69, 96, 0.35), inset 0 1px 1px rgba(255, 255, 255, 0.15);
-      transition: all 0.3s ease; /* 부드러운 전환 효과 */
+      transition: all 0.3s ease;
     }
     .healing-unit { opacity: 0.95; white-space: nowrap; }
     /* 결과 표는 항상 한 줄로 표시 */
@@ -508,21 +488,30 @@
     .item-list .item-controls label.pin-chip:has(input:checked)::before{ background:#1a1a2e; }
     .item-list .item-controls label.chip:has(input:checked)::before{ background:#fff; }
 
-    /* ---------- SCENARIO: radio group as pills ---------- */
+    /* ---------- SCENARIO: radio group & checkbox toggles as pills ---------- */
     .stack-scenarios .scen-item { display: inline-block; }
-    .stack-scenarios .scen-item input[type="radio"] { position: absolute; opacity: 0; width: 0; height: 0; }
-    .stack-scenarios .scen-item input[type="radio"] + label {
+    .stack-scenarios .scen-item input[type="radio"],
+    .stack-scenarios .scen-item input[type="checkbox"] { 
+      position: absolute; opacity: 0; width: 0; height: 0; 
+    }
+    .stack-scenarios .scen-item input[type="radio"] + label,
+    .stack-scenarios .scen-item input[type="checkbox"] + label {
       display: inline-block; margin: .25rem .35rem .25rem 0; padding: .4rem .8rem;
       border: 1px solid var(--border-color); border-radius: 999px;
       background: rgba(255,255,255,0.04); color: var(--text-color);
       transition: background .2s ease, border-color .2s ease, transform .05s ease, box-shadow .2s ease;
       cursor: pointer; user-select: none; font-size: .95rem;
     }
-    .stack-scenarios .scen-item input[type="radio"] + label:hover {
+    .stack-scenarios .scen-item input[type="radio"] + label:hover,
+    .stack-scenarios .scen-item input[type="checkbox"] + label:hover {
       border-color: rgba(233,69,96,0.55); background: rgba(233,69,96,0.08);
     }
-    .stack-scenarios .scen-item input[type="radio"]:focus-visible + label { box-shadow: 0 0 0 3px rgba(233,69,96,0.35); }
-    .stack-scenarios .scen-item input[type="radio"]:checked + label {
+    .stack-scenarios .scen-item input[type="radio"]:focus-visible + label,
+    .stack-scenarios .scen-item input[type="checkbox"]:focus-visible + label { 
+      box-shadow: 0 0 0 3px rgba(233,69,96,0.35); 
+    }
+    .stack-scenarios .scen-item input[type="radio"]:checked + label,
+    .stack-scenarios .scen-item input[type="checkbox"]:checked + label {
       color: #fff; border-color: rgba(233,69,96,0.65);
       background: linear-gradient(135deg, #e94560 0%, #ff6b81 100%);
       box-shadow: 0 6px 18px rgba(0,0,0,0.35), 0 0 0 2px rgba(233,69,96,0.22) inset;
@@ -559,31 +548,23 @@
 
   
     /* ---------- LAYOUT: radio pills as responsive flex rows (2 columns) ---------- */
-    .stack-scenarios { display: flex; flex-wrap: wrap; gap: .6rem; align-items: stretch; }
-    .stack-scenarios .scen-item { display: block; flex: 1 1 calc(50% - .3rem); }
-    @media (max-width: 560px) { .stack-scenarios .scen-item { flex-basis: 100%; } }
-    .stack-scenarios .scen-item input[type="radio"] + label {
+    .stack-scenarios { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: .6rem; align-items: stretch; }
+    .stack-scenarios > h3 { grid-column: 1 / -1; margin-bottom: .25rem; }
+    .stack-scenarios .scen-item { display: block; margin: 0;}
+    .stack-scenarios .scen-item input[type="radio"] + label,
+    .stack-scenarios .scen-item input[type="checkbox"] + label {
       display: flex; align-items: center; justify-content: center; width: 100%;
-      margin: 0; min-height: 42px; /* equal height for pills */
+      margin: 0; min-height: 44px; box-sizing: border-box; padding: .6rem .9rem;
     }
-
-  
-    /* ---------- LAYOUT FIX: header span for flex ---------- */
-    .stack-scenarios > h3 { flex: 0 0 100%; margin-bottom: .25rem; }
-    .stack-scenarios > .scen-item { margin: 0; }
-
-  
-    /* === OVERRIDE: 강화광 가속기 라디오 정렬 (2열 그리드, 겹침 방지) === */
-    .stack-scenarios{ display:grid !important; grid-template-columns:repeat(2, minmax(0,1fr)); gap:.6rem; align-items:stretch; }
-    .stack-scenarios>h3{ grid-column:1 / -1; margin-bottom:.25rem; }
-    .stack-scenarios .scen-item{ display:block !important; }
-    .stack-scenarios .scen-item input[type="radio"] + label{ display:flex !important; align-items:center; justify-content:center; width:100%; margin:0; min-height:44px; box-sizing:border-box; padding:.6rem .9rem; }
-    @media (max-width:560px){ .stack-scenarios{ grid-template-columns:1fr; } }
+    @media (max-width: 560px) { .stack-scenarios { grid-template-columns: 1fr; } }
 
   
     /* ---- Micro interactions & responsive enhancements ---- */
     @keyframes pop { 0% { transform: scale(.98); } 100% { transform: scale(1); } }
-    .stack-scenarios .scen-item input[type="radio"]:checked + label { animation: pop 120ms ease-out; }
+    .stack-scenarios .scen-item input[type="radio"]:checked + label,
+    .stack-scenarios .scen-item input[type="checkbox"]:checked + label { 
+      animation: pop 120ms ease-out; 
+    }
     .item-list .item-controls input[type="checkbox"]:checked { animation: pop 120ms ease-out; }
     @media (min-width:1280px) { .stack-scenarios { grid-template-columns: repeat(2, minmax(0,1fr)); } }
 
@@ -611,6 +592,13 @@
         <h3>아마리 해독제</h3>
         <div class="scen-item"><input type="checkbox" id="chkLowHp"><label for="chkLowHp">저체력 회복 (HP&lt;50%, 무기 치유량 +15%)<span class="help" title="HP 50% 미만일 때 메르시 무기 치유량에 +15%가 곱연산으로 추가됩니다.">?</span></label></div>
       </div>
+      <div class="am-scenarios">
+        <h3>부상자 분류소</h3>
+        <div class="scen-item">
+          <input type="checkbox" id="chkTriage">
+          <label for="chkTriage">치유량 25%증가</label>
+        </div>
+      </div>
       <div class="stack-scenarios">
         <h3>강화광 가속기</h3>
         <div class="scen-item"><input type="radio" name="stack" value="stack0" id="stack-none" checked><label for="stack-none">중첩 없음 (+0% 무공)</label></div>
@@ -618,9 +606,16 @@
         <div class="scen-item"><input type="radio" name="stack" value="stack2" id="stack2"><label for="stack2">2중첩 (+10% 무공)</label></div>
         <div class="scen-item"><input type="radio" name="stack" value="stack3" id="stack3"><label for="stack3">3중첩 (+15% 무공)</label></div>
       </div>
-      <div class="am-scenarios">
+      <div class="stack-scenarios">
         <h3>조건부 효과</h3>
-        <div class="scen-item"><input type="checkbox" id="chkConditional"><label for="chkConditional">기술, 생존 아이템 조건부 활성화</label></div>
+        <div class="scen-item">
+          <input type="checkbox" id="chkVanadium">
+          <label for="chkVanadium">바나듐 주사</label>
+        </div>
+        <div class="scen-item">
+          <input type="checkbox" id="chkCrusader">
+          <label for="chkCrusader">성전사 유압 시스템</label>
+        </div>
       </div>
     </div>
   </div>
@@ -644,26 +639,14 @@
   <div class="item-list">
     <h2>아이템 목록 <small>(포함/고정 토글)</small>
       <div class="item-list-actions">
+        <input type="search" id="itemSearch" placeholder="아이템 검색...">
         <button id="editItems" type="button">아이템 목록 편집</button>
         <button id="calcItems" type="button">선택 아이템 계산</button>
       </div>
     </h2>
 
-    <div class="item-tabs" role="tablist" aria-label="아이템 분류">
-      <button class="item-tab active" type="button" role="tab" aria-selected="true" data-tab-target="weapon">무기</button>
-      <button class="item-tab" type="button" role="tab" aria-selected="false" data-tab-target="tech">기술</button>
-      <button class="item-tab" type="button" role="tab" aria-selected="false" data-tab-target="survival">생존</button>
-    </div>
-    <div class="item-tab-panels">
-      <div class="item-list-content item-tab-panel active" role="tabpanel" data-tab-panel="weapon">
-      <!-- Weapon Items are injected via JavaScript -->
-      </div>
-      <div class="item-list-content item-tab-panel" role="tabpanel" data-tab-panel="tech" hidden>
-      <!-- Tech Items are injected via JavaScript -->
-      </div>
-      <div class="item-list-content item-tab-panel" role="tabpanel" data-tab-panel="survival" hidden>
-      <!-- Survival Items are injected via JavaScript -->
-      </div>
+    <div id="item-container">
+      <!-- Items will be injected here by JavaScript -->
     </div>
   </div>
 </div>
@@ -677,14 +660,16 @@
     const calcItemsBtn = document.getElementById('calcItems');
     const toggleScenarioBtn = document.getElementById('toggleScenario');
     const scenarioContent = document.querySelector('.scenario-content');
+    const itemContainer = document.getElementById('item-container');
+    const itemSearchInput = document.getElementById('itemSearch');
 
     let includeInputs = [];
     let pinInputs = [];
     const lowHpInput = document.getElementById('chkLowHp');
     const stackRadios = document.querySelectorAll('input[name="stack"]');
-    const conditionalToggle = document.getElementById('chkConditional');
-    const tabButtons = Array.from(document.querySelectorAll('.item-tab'));
-    const tabPanels = Array.from(document.querySelectorAll('.item-tab-panel'));
+    const vanadiumToggle = document.getElementById('chkVanadium');
+    const crusaderToggle = document.getElementById('chkCrusader');
+    const triageToggle = document.getElementById('chkTriage');
     const editItemsBtn = document.getElementById('editItems');
     const itemListEl = document.querySelector('.item-list');
     let itemCards = [];
@@ -695,74 +680,7 @@
     const healingEl = document.getElementById('healing');
     const bestComboTbody = document.getElementById('bestCombo');
 
-    let bestComboFadeTimeoutId = null;
-    let bestComboFadeHandler = null;
-    let isBestComboTransitionActive = false;
-
-    function updateBestComboContentWithFade(updateFn) {
-      if (typeof updateFn !== 'function') return;
-      if (!bestComboTbody) {
-        updateFn();
-        return;
-      }
-
-      const prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      if (prefersReducedMotion) {
-        bestComboTbody.classList.remove('is-fading-out');
-        updateFn();
-        return;
-      }
-
-      if (bestComboFadeHandler) {
-        bestComboTbody.removeEventListener('transitionend', bestComboFadeHandler);
-        bestComboFadeHandler = null;
-      }
-      if (bestComboFadeTimeoutId != null) {
-        clearTimeout(bestComboFadeTimeoutId);
-        bestComboFadeTimeoutId = null;
-      }
-
-      const finalize = () => {
-        if (!isBestComboTransitionActive) return;
-        isBestComboTransitionActive = false;
-        if (bestComboFadeHandler) {
-          bestComboTbody.removeEventListener('transitionend', bestComboFadeHandler);
-          bestComboFadeHandler = null;
-        }
-        if (bestComboFadeTimeoutId != null) {
-          clearTimeout(bestComboFadeTimeoutId);
-          bestComboFadeTimeoutId = null;
-        }
-        try {
-          updateFn();
-        } catch (err) {
-          console.error(err);
-        }
-        requestAnimationFrame(() => {
-          bestComboTbody.classList.remove('is-fading-out');
-        });
-      };
-
-      bestComboFadeHandler = (event) => {
-        if (event.target === bestComboTbody && event.propertyName === 'opacity') {
-          finalize();
-        }
-      };
-
-      bestComboTbody.addEventListener('transitionend', bestComboFadeHandler);
-      bestComboFadeTimeoutId = window.setTimeout(finalize, 850);
-      isBestComboTransitionActive = true;
-
-      bestComboTbody.classList.remove('is-fading-out');
-      void bestComboTbody.offsetWidth;
-      bestComboTbody.classList.add('is-fading-out');
-    }
-
-    function renderBestComboMessage(message) {
-      updateBestComboContentWithFade(() => {
-        bestComboTbody.innerHTML = `<tr><td colspan="4">${message}</td></tr>`;
-      });
-    }
+    let isCalculating = false;
 
     const itemData = {
       weapon: [
@@ -775,15 +693,15 @@
         { name: '차가운 냉각수', price: 5500, wp: 10, as: 0, rarity: 'blue', description: '무공+10%' },
         { name: '탈론 개조 모듈', price: 6000, wp: 15, as: 0, rarity: 'blue', description: '무공+15%' },
         { name: '공중 조난자', price: 9000, wp: 0, as: 10, rarity: 'purple', description: '공속+10%' },
-        { name: '코드브레이커', price: 9000, wp: 15, as: 0, rarity: 'purple', description: '무공+15%' },
+        { name: '코드브레이커', price: 10000, wp: 15, as: 0, rarity: 'purple', description: '무공+15%' },
         { name: '회수 산탄', price: 9000, wp: 0, as: 10, rarity: 'purple', description: '공속+10%' },
         { name: '볼스카야 군수품', price: 9500, wp: 0, as: 10, rarity: 'purple', description: '공속+10%' },
         { name: '무기 재머', price: 10000, wp: 10, as: 0, rarity: 'purple', description: '무공+10%' },
         { name: '사령관의 탄창', price: 10000, wp: 0, as: 10, rarity: 'purple', description: '공속+10%' },
         { name: '카두세우스 연장기', price: 10000, wp: 10, as: 0, rarity: 'purple', description: '무공+10%' },
+        { name: '천상의 탄창', price: 10000, wp: 10, as: 0, rarity: 'purple', description: '무공+10%' },
         { name: '강화광 가속기', price: 11000, wp: 10, as: 0, rarity: 'purple', description: '무공+10%' },
         { name: '부스터 제트', price: 11000, wp: 0, as: 20, rarity: 'purple', description: '공속+20%' },
-        { name: '성운 전도', price: 11000, wp: 5, as: 0, rarity: 'purple', description: '무공+5%' },
         { name: '아마리의 해독제', price: 11000, wp: 15, as: 0, rarity: 'purple', description: '무공+15% (HP<50%)' },
         { name: '엘사가 제압기', price: 11000, wp: 10, as: 0, rarity: 'purple', description: '무공+10%' },
         { name: '거미의 눈', price: 14000, wp: 25, as: 0, rarity: 'purple', description: '무공+25%' },
@@ -800,19 +718,23 @@
         { name: '스카이라인 나노머신', price: 4000, wp: 0, as: 0, rarity: 'blue', description: '무공+0%, 공속+0%' },
         { name: '쓰레기촌 뭐더라', price: 4000, wp: 0, as: 0, rarity: 'blue', description: '무공+0%, 공속+0%' },
         { name: '에너지 충전 손목 방어구', price: 4000, wp: 0, as: 0, rarity: 'blue', description: '무공+0%, 공속+0%' },
+        { name: '장거리 날개', price: 4000, wp: 0, as: 0, rarity: 'blue', description: '무공+0%, 공속+0%'},
         { name: '다용도 도구', price: 4500, wp: 0, as: 0, rarity: 'blue', description: '무공+0%, 공속+0%' },
         { name: '활력 증폭기', price: 5000, wp: 0, as: 0, rarity: 'blue', description: '무공+0%, 공속+0%' },
         { name: '나노 콜라', price: 6000, wp: 0, as: 0, rarity: 'blue', description: '무공+0%, 공속+0%' },
+        { name: '축복받은 부스터', price: 9000, wp: 0, as: 0, rarity: 'purple', description: '무공+0%, 공속+0%'},
         { name: '음파 재충전', price: 9000, wp: 0, as: 0, rarity: 'purple', description: '무공+0%, 공속+0%' },
         { name: '3연속 토미건 발사', price: 9500, wp: 0, as: 10, rarity: 'purple', description: '공속+10%' },
         { name: '루메리코 융합 기관포', price: 10000, wp: 0, as: 0, rarity: 'purple', description: '무공+0%, 공속+0%' },
         { name: '생체기술 극대화', price: 10000, wp: 0, as: 0, rarity: 'purple', description: '무공+0%, 공속+0%' },
         { name: '초굴근', price: 10000, wp: 10, as: 0, rarity: 'purple', description: '무공+10%' },
         { name: '촉매 수정', price: 10000, wp: 0, as: 0, rarity: 'purple', description: '무공+0%, 공속+0%' },
+        { name: '부활 거리 측정기', price: 10000, wp: 0, as: 0, rarity: 'purple', description: '무공+0%, 공속+0%'},
         { name: '사이버베놈', price: 10500, wp: 0, as: 0, rarity: 'purple', description: '무공+0%, 공속+0%' },
         { name: '광채 눈동자', price: 11000, wp: 0, as: 0, rarity: 'purple', description: '무공+0%, 공속+0%' },
         { name: '액체질소', price: 11000, wp: 0, as: 0, rarity: 'purple', description: '무공+0%, 공속+0%' },
         { name: '여우의 징표', price: 11000, wp: 0, as: 0, rarity: 'purple', description: '무공+0%, 공속+0%' },
+        { name: '천사의 곡예', price: 11000, wp: 0, as: 0, rarity: 'purple', description: '무공+0%, 공속+0%'},
         { name: '챔피언의 도구', price: 14000, wp: 0, as: 0, rarity: 'purple', description: '무공+0%, 공속+0%' },
       ],
       survival: [
@@ -831,7 +753,9 @@
         { name: '완충재', price: 3750, wp: 0, as: 0, rarity: 'blue', description: '무공+0%, 공속+0%' },
         { name: 'E생명력', price: 4000, wp: 0, as: 0, rarity: 'blue', description: '무공+0%, 공속+0%' },
         { name: '철갑 배기구', price: 4000, wp: 0, as: 0, rarity: 'blue', description: '무공+0%, 공속+0%' },
-        { name: '피의 구속', price: 4000, wp: 0, as: 0, rarity: 'purple', description: '무공+0%, 공속+0%' },
+        { name: '공기역학적 깃털', price: 4000, wp: 0, as: 0, rarity: 'blue', description: '무공+0%, 공속+0%'},
+        { name: '천사의 레저 복장', price: 4000, wp: 0, as: 0, rarity: 'blue', description: '무공+0%, 공속+0%'},
+        { name: '피의 구속', price: 4000, wp: 0, as: 0, rarity: 'blue', description: '무공+0%, 공속+0%' },
         { name: '성전사 유압 시스템', price: 4500, wp: 0, as: 0, rarity: 'blue', description: '무공+0%, 공속+0%', note: '조건부 활성 시 공속+5%' },
         { name: '메카 Z 시리즈', price: 5000, wp: 0, as: 0, rarity: 'blue', description: '무공+0%, 공속+0%' },
         { name: '유전학자의 약병', price: 9000, wp: 0, as: 0, rarity: 'purple', description: '무공+0%, 공속+0%' },
@@ -842,13 +766,15 @@
         { name: '어둠의 건틀릿', price: 10000, wp: 0, as: 0, rarity: 'purple', description: '무공+0%, 공속+0%' },
         { name: '화성의 수리공', price: 10000, wp: 0, as: 0, rarity: 'purple', description: '무공+0%, 공속+0%' },
         { name: '환영 유입', price: 10000, wp: 10, as: 0, rarity: 'purple', description: '무공+10%' },
+        { name: '연쇄 유발기', price: 10000, wp: 0, as: 0, rarity: 'purple', description: '무공+0%, 공속+0%'},
+        { name: '성운 전도', price: 11000, wp: 5, as: 0, rarity: 'purple', description: '무공+5%' },
         { name: '오군디무 감소장', price: 11000, wp: 0, as: 0, rarity: 'purple', description: '무공+0%, 공속+0%' },
       ],
     };
 
     const slugify = (name = '') => name.replace(/\s+/g, '');
 
-    function createItemCard(item) {
+    function createItemCard(item, categoryKey) {
       const card = document.createElement('div');
       const idBase = item.id || slugify(item.name);
       card.className = `item ${item.rarity}`;
@@ -857,6 +783,8 @@
       card.dataset.price = String(item.price);
       card.dataset.wp = String(item.wp);
       card.dataset.as = String(item.as);
+      card.dataset.category = categoryKey;
+      card.dataset.rarity = item.rarity;
       if (item.fixedOnly) {
         card.dataset.fixedOnly = 'true';
       }
@@ -878,7 +806,7 @@
 
       const label = document.createElement('span');
       label.className = 'item-label';
-      let labelHtml = `${item.name} (${item.price})<br>${item.description}`;
+      let labelHtml = `${item.name} ${item.price.toLocaleString()}<br>${item.description}`;
       if (item.note) {
         labelHtml += `<br><small>${item.note}</small>`;
       }
@@ -889,13 +817,30 @@
     }
 
     function renderItems() {
-      Object.entries(itemData).forEach(([category, items]) => {
-        const panel = document.querySelector(`.item-tab-panel[data-tab-panel="${category}"]`);
-        if (!panel) return;
-        panel.innerHTML = '';
+      itemContainer.innerHTML = ''; // Clear previous items
+      const categoryMap = {
+        weapon: '무기',
+        tech: '기술',
+        survival: '생존'
+      };
+
+      Object.entries(itemData).forEach(([categoryKey, items]) => {
+        const categoryWrapper = document.createElement('div');
+        categoryWrapper.className = 'item-category';
+
+        const categoryTitle = document.createElement('h3');
+        categoryTitle.textContent = categoryMap[categoryKey];
+        categoryWrapper.appendChild(categoryTitle);
+
+        const contentGrid = document.createElement('div');
+        contentGrid.className = 'item-list-content';
+        
         items.forEach(item => {
-          panel.appendChild(createItemCard(item));
+          contentGrid.appendChild(createItemCard(item, categoryKey));
         });
+
+        categoryWrapper.appendChild(contentGrid);
+        itemContainer.appendChild(categoryWrapper);
       });
     }
 
@@ -928,7 +873,7 @@
         const toggleBtn = document.createElement('button');
         toggleBtn.type = 'button';
         toggleBtn.className = 'item-visibility-toggle';
-        toggleBtn.textContent = '👁️';
+        toggleBtn.textContent = '👀';
         const labelName = item.dataset.name || '아이템';
         toggleBtn.title = '아이템 표시/숨김 전환';
         toggleBtn.setAttribute('aria-label', `${labelName} 표시/숨김 전환`);
@@ -937,8 +882,6 @@
           event.stopPropagation();
           const willHide = item.dataset.hidden === 'true' ? false : true;
           setItemHiddenState(item, willHide);
-          calculate();
-          triggerAutoRecommend();
           saveState();
         });
         item.insertAdjacentElement('afterbegin', toggleBtn);
@@ -1040,7 +983,9 @@
           stackId: stackSel ? stackSel.id : 'stack-none',
           includes,
           pins,
-          conditional: !!(conditionalToggle && conditionalToggle.checked),
+          vanadiumActive: vanadiumToggle.checked,
+          crusaderActive: crusaderToggle.checked,
+          triageActive: triageToggle.checked,
           hiddenItems,
         };
         localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
@@ -1059,9 +1004,10 @@
           const r = document.getElementById(data.stackId);
           if (r) r.checked = true;
         }
-        if (typeof data.conditional === 'boolean' && conditionalToggle) {
-          conditionalToggle.checked = data.conditional;
-        }
+        if (typeof data.vanadiumActive === 'boolean') vanadiumToggle.checked = data.vanadiumActive;
+        if (typeof data.crusaderActive === 'boolean') crusaderToggle.checked = data.crusaderActive;
+        if (typeof data.triageActive === 'boolean') triageToggle.checked = data.triageActive;
+
         includeInputs.forEach(i => i.checked = false);
         pinInputs.forEach(p => p.checked = false);
         if (Array.isArray(data.includes)) {
@@ -1083,28 +1029,19 @@
         formatItemPrices();
         setupItemVisibilityControls();
         addEventListeners();
-        if (tabButtons.length) {
-            const defaultTab = document.querySelector('.item-tab.active') || tabButtons[0];
-            if (defaultTab) {
-                activateTab(defaultTab.dataset.tabTarget);
-            }
-        }
         loadState();
         enforceFixedOnlyRules();
         applyHiddenStateFromStorage();
         exitEditMode();
-        calculate(); // 초기 로드 시 계산
+        calculate(true); // 초기 로드 시 즉시 계산
     }
 
-    /** 아이템 목록의 가격에 콤마를 추가합니다. */
+    /** 아이템 목록의 가격에 콤마를 추가하고 괄호를 제거합니다. */
     function formatItemPrices() {
         const escapeHtml = (str = '') => str.replace(/[&<>"']/g, ch => ({
-            "&": "&amp;",
-            "<": "&lt;",
-            ">": "&gt;",
-            "\"": "&quot;",
-            "'": "&#39;"
+            "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;"
         }[ch] || ch));
+        
         document.querySelectorAll('.item').forEach(item => {
             const label = item.querySelector('.item-label');
             if (!label) return;
@@ -1114,20 +1051,20 @@
 
             const segments = original.split('<br>');
             const firstLine = (segments.shift() || '').trim();
-            const statsHtml = segments.join('<br>').trim();
+            let statsHtml = segments.join('<br>').trim();
+            
+            statsHtml = statsHtml.replace(/(무공\s*\+\s*\d+%)/g, '<span class="stat-highlight">$1</span>');
+            statsHtml = statsHtml.replace(/(공속\s*\+\s*\d+%)/g, '<span class="stat-highlight">$1</span>');
 
             const priceNumber = Number(item.dataset.price);
             const hasValidPrice = Number.isFinite(priceNumber);
             const formattedPrice = hasValidPrice ? priceNumber.toLocaleString() : '';
-
-            const fallbackMatch = firstLine.match(/\(([^)]+)\)/);
-            const priceDisplay = formattedPrice || (fallbackMatch ? fallbackMatch[1] : '');
-
+            
             const nameFromData = item.dataset.name ? escapeHtml(item.dataset.name) : '';
-            const nameFromLine = firstLine ? escapeHtml(firstLine.replace(/\s*\([^)]*\)\s*$/, '')) : '';
+            const nameFromLine = firstLine.replace(/\s*[\d,.]+\s*$/, '').trim();
             const safeName = nameFromData || nameFromLine;
 
-            const nameHtml = safeName ? `<span class="item-name">${safeName}${priceDisplay ? `<span class="item-price">(${priceDisplay})</span>` : ''}</span>` : firstLine;
+            const nameHtml = `<span class="item-name">${safeName}<span class="item-price">${formattedPrice}</span></span>`;
             const statsSection = statsHtml ? `<span class="item-stats">${statsHtml}</span>` : '';
 
             label.innerHTML = `${nameHtml}${statsSection}`;
@@ -1163,15 +1100,15 @@
       const base = getItemData(inputEl);
       let wp = base.wp;
       let as = base.as;
-      if (conditionalToggle && conditionalToggle.checked) {
-        if (base.name === '바나듐 주사') {
-          wp += 10;
-          as += 10;
-        }
-        if (base.name === '성전사 유압 시스템') {
-          as += 5;
-        }
+      
+      if (base.name === '바나듐 주사' && vanadiumToggle.checked) {
+        wp += 10;
+        as += 10;
       }
+      if (base.name === '성전사 유압 시스템' && crusaderToggle.checked) {
+        as += 5;
+      }
+      
       return { ...base, wp, as };
     }
 
@@ -1187,42 +1124,96 @@
       }
       return { am, stackBonus };
     }
+    
+    /**
+     * 주어진 아이템 목록을 기반으로 능력치를 계산합니다. (UI 업데이트 없음)
+     * @param {HTMLElement[]} items - 계산할 아이템의 input 요소 배열
+     * @returns {object} 계산된 능력치 객체
+     */
+    function calculateCoreStats(items) {
+        const { am, stackBonus } = getScenarioBonus();
+        let totalPrice = 0, wp = 0, aspd = 0;
+        let hasAmari = false;
+        let hasAccelerator = false;
 
-    /** 현재 선택된 아이템 기준으로 능력치를 계산하고 화면에 표시합니다. */
-    function calculate() {
-      const { am, stackBonus } = getScenarioBonus();
-      let totalPrice = 0, wp = 0, aspd = 0;
-      let hasAmari = false;
-      let hasAccelerator = false;
-
-      includeInputs.forEach((input, idx) => {
-        if (input.checked || pinInputs[idx].checked) {
-          const d = getEffectiveStats(input);
-          totalPrice += d.price;
-          wp += d.wp;
-          aspd += d.as;
-          if (d.name === '강화광 가속기') hasAccelerator = true;
-          if (d.name === '아마리의 해독제') hasAmari = true;
+        items.forEach(input => {
+            const d = getEffectiveStats(input);
+            totalPrice += d.price;
+            wp += d.wp;
+            aspd += d.as;
+            if (d.name === '강화광 가속기') hasAccelerator = true;
+            if (d.name === '아마리의 해독제') hasAmari = true;
+        });
+        
+        if (hasAccelerator) {
+            wp += stackBonus;
         }
-      });
-      
-      if (hasAccelerator) {
-        wp += stackBonus;
-      }
 
-      let healOn = baseHealing * (1 + wp / 100) * (1 + aspd / 100);
-      const healOff = healOn; // 이 변수는 현재 로직에서 화면 표시에 사용되지 않지만, 일관성을 위해 유지합니다.
-      if (hasAmari && lowHpInput.checked) {
-        healOn *= (1 + am / 100);
-      }
-      totalPriceEl.textContent = totalPrice.toLocaleString();
-      totalWPEl.textContent = wp;
-      totalASEl.textContent = aspd;
-      if (hasAmari && lowHpInput.checked) {
-        healingEl.textContent = `${healOn.toFixed(1)} (${healOff.toFixed(1)})`;
-      } else {
-        healingEl.textContent = healOn.toFixed(1);
-      }
+        let healOn = baseHealing * (1 + wp / 100) * (1 + aspd / 100);
+        let healOff = healOn;
+        
+        if (hasAmari && lowHpInput.checked) {
+            healOn *= (1 + am / 100);
+        }
+
+        if (triageToggle.checked) {
+            healOn *= 1.25;
+            healOff *= 1.25;
+        }
+
+        let healString = healOn.toFixed(1);
+        if (hasAmari && lowHpInput.checked) {
+            healString = `${healOn.toFixed(1)} (${healOff.toFixed(1)})`;
+        }
+
+        return { totalPrice, wp, aspd, healString };
+    }
+
+    /**
+     * 추천 조합 테이블과 결과 요약 UI를 업데이트합니다. (페이드 효과 포함)
+     * @param {HTMLElement[]} items - 표시할 아이템의 input 요소 배열
+     * @param {boolean} isInitial - 초기 로드 여부 (페이드 효과 비활성화)
+     */
+    function updateResultPanels(items, isInitial = false) {
+        const stats = calculateCoreStats(items);
+        
+        const updateFn = () => {
+            renderBestComboTable(items);
+            totalPriceEl.textContent = stats.totalPrice.toLocaleString();
+            totalWPEl.textContent = stats.wp;
+            totalASEl.textContent = stats.aspd;
+            healingEl.textContent = stats.healString;
+        };
+        
+        const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (isInitial || prefersReducedMotion) {
+            updateFn();
+            return;
+        }
+
+        const elementsToFade = [bestComboTbody, totalPriceEl, totalWPEl, totalASEl, healingEl];
+        elementsToFade.forEach(el => el.classList.add('is-fading-out'));
+
+        setTimeout(() => {
+            updateFn();
+            elementsToFade.forEach(el => el.classList.remove('is-fading-out'));
+        }, 500);
+    }
+    
+    /** 현재 선택/고정된 아이템 목록을 가져옵니다. */
+    function getCurrentlySelectedItems() {
+        return includeInputs.filter((input, idx) => input.checked || pinInputs[idx].checked);
+    }
+
+    /** 현재 선택된 아이템 기준으로 계산하고 화면에 표시합니다. */
+    function calculate(isInitial = false) {
+      if (isCalculating && !isInitial) return;
+      isCalculating = true;
+
+      const selectedItems = getCurrentlySelectedItems();
+      updateResultPanels(selectedItems, isInitial);
+      
+      setTimeout(() => { isCalculating = false; }, 50);
     }
 
     /** 예산과 아이템 수에 맞는 최적의 조합을 추천합니다. */
@@ -1251,8 +1242,9 @@
           const slotsLeft = maxItems - pinned.length;
 
           if (budgetLeft < 0 || slotsLeft < 0) {
-            renderBestComboMessage('고정 아이템이 예산 또는 슬롯 제한을 초과했습니다.');
-            calculate();
+            renderBestComboTable([]); // 빈 배열로 테이블 업데이트
+            bestComboTbody.innerHTML = `<tr><td colspan="4">고정 아이템이 예산 또는 슬롯 제한을 초과했습니다.</td></tr>`;
+            calculate(true);
             recommendBtn.disabled = false;
             recommendBtn.textContent = originalText;
             return;
@@ -1260,7 +1252,7 @@
 
           const optional = includeInputs.filter(input => {
             const itemEl = input.closest('.item');
-            return !pinned.includes(input) && itemEl && !itemEl.dataset.fixedOnly && !input.disabled;
+            return !pinned.includes(input) && !itemEl.dataset.fixedOnly && !input.disabled;
           });
           const optionalData = optional.map(input => ({ input, stats: getEffectiveStats(input) }));
 
@@ -1270,9 +1262,13 @@
             const hasAmari = pinnedHasAm || state.hasAm;
             const hasAccelerator = pinnedHasAccelerator || state.hasAccelerator;
             if (hasAccelerator) totalWp += stackBonus;
+            
             let heal = baseHealing * (1 + totalWp / 100) * (1 + totalAs / 100);
             if (hasAmari && lowHpInput.checked) {
               heal *= (1 + am / 100);
+            }
+            if (triageToggle.checked) {
+                heal *= 1.25;
             }
             return heal;
           }
@@ -1319,6 +1315,7 @@
             const index = includeInputs.indexOf(input);
             if (index !== -1) {
               pinInputs[index].checked = true;
+              includeInputs[index].checked = true;
             }
           });
           (bestState.items || []).forEach(input => {
@@ -1327,45 +1324,67 @@
               includeInputs[index].checked = true;
             }
           });
-
-          calculate();
-          updateBestComboTable(pinned.concat(bestState.items || []));
+          
+          const finalCombo = getCurrentlySelectedItems();
+          updateResultPanels(finalCombo);
           saveState();
 
           recommendBtn.disabled = false;
           recommendBtn.textContent = originalText;
         } catch (err) {
           console.error(err);
-          renderBestComboMessage('계산 중 오류가 발생했습니다.');
+          bestComboTbody.innerHTML = `<tr><td colspan="4">계산 중 오류가 발생했습니다.</td></tr>`;
           recommendBtn.disabled = false;
           recommendBtn.textContent = originalText;
         }
       }, 10);
     }
 
-    /** 추천 조합 테이블을 업데이트합니다. */
-    function updateBestComboTable(combo) {
-      const comboList = Array.isArray(combo) ? combo : [];
-      updateBestComboContentWithFade(() => {
-        const { stackBonus } = getScenarioBonus();
+    /** 추천 조합 테이블 내용을 렌더링합니다. (HTML만 업데이트) */
+    function renderBestComboTable(combo) {
+        const rarityOrder = { green: 1, blue: 2, purple: 3 };
+        combo.sort((a, b) => {
+            const itemA = a.closest('.item');
+            const itemB = b.closest('.item');
+            if (!itemA || !itemB) return 0;
+
+            const isPinnedA = itemA.querySelector('.pin').checked;
+            const isPinnedB = itemB.querySelector('.pin').checked;
+            if (isPinnedA !== isPinnedB) {
+                return isPinnedB - isPinnedA;
+            }
+
+            const orderA = rarityOrder[itemA.dataset.rarity];
+            const orderB = rarityOrder[itemB.dataset.rarity];
+            if (orderA !== orderB) {
+                return orderA - orderB;
+            }
+
+            const priceA = Number(itemA.dataset.price);
+            const priceB = Number(itemB.dataset.price);
+            return priceA - priceB;
+        });
+
         bestComboTbody.innerHTML = '';
-        if (comboList.length === 0) {
+        if (combo.length === 0) {
           bestComboTbody.innerHTML = `<tr><td colspan="4">조건에 맞는 조합이 없습니다.</td></tr>`;
           return;
         }
-        comboList.forEach(i => {
+        const { stackBonus } = getScenarioBonus();
+        const hasAcceleratorInCombo = combo.some(i => getItemData(i).name === '강화광 가속기');
+
+        combo.forEach(i => {
           const tr = document.createElement('tr');
           const itemDiv = i.closest('.item');
-          const cls = itemDiv.classList.contains('green') ? 'green' : itemDiv.classList.contains('blue') ? 'blue' : 'purple';
+          const cls = itemDiv.dataset.rarity;
           const color = getComputedStyle(document.documentElement).getPropertyValue(`--${cls}`);
           const pinEl = itemDiv.querySelector('.pin');
           const isPinned = !!(pinEl && pinEl.checked);
           const base = getItemData(i);
           const stats = getEffectiveStats(i);
           let wpVal = stats.wp;
-          if (base.name === '강화광 가속기') {
-            const hasAccelerator = comboList.some(item => getItemData(item).name === '강화광 가속기');
-            if (hasAccelerator) wpVal += stackBonus;
+          if (base.name === '강화광 가속기' && hasAcceleratorInCombo) {
+             wpVal += stackBonus;
           }
           const nameHtml = isPinned ? `<span title="고정 아이템" aria-label="고정 아이템" style="width:.55rem;height:.55rem;border-radius:50%;background:linear-gradient(135deg,#f1c40f,#f39c12);box-shadow:0 0 5px rgba(241,196,15,.35);display:inline-block;margin-right:.35rem;vertical-align:-1px;"></span>${base.name}` : base.name;
           tr.innerHTML = `
@@ -1376,24 +1395,6 @@
           `;
           bestComboTbody.appendChild(tr);
         });
-      });
-    }
-
-    function activateTab(target) {
-      tabButtons.forEach(btn => {
-        const isActive = btn.dataset.tabTarget === target;
-        btn.classList.toggle('active', isActive);
-        btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
-      });
-      tabPanels.forEach(panel => {
-        const isActive = panel.dataset.tabPanel === target;
-        panel.classList.toggle('active', isActive);
-        if (isActive) {
-          panel.removeAttribute('hidden');
-        } else {
-          panel.setAttribute('hidden', '');
-        }
-      });
     }
 
     /** 자동 추천을 위한 디바운스 핸들러 */
@@ -1404,21 +1405,14 @@
 
     /** 모든 이벤트 리스너를 등록합니다. */
     function addEventListeners() {
-        calcItemsBtn.addEventListener('click', calculate);
+        calcItemsBtn.addEventListener('click', () => calculate());
         recommendBtn.addEventListener('click', recommend);
         if (editItemsBtn) {
             editItemsBtn.addEventListener('click', toggleEditMode);
         }
 
-        // 보유 재화 입력칸 클릭 시 전체 선택
-        budgetInput.addEventListener('click', () => {
-            budgetInput.select();
-        });
-
-        // 최대 아이템 수 입력칸 클릭 시 전체 선택
-        maxItemsInput.addEventListener('click', () => {
-            maxItemsInput.select();
-        });
+        budgetInput.addEventListener('click', () => budgetInput.select());
+        maxItemsInput.addEventListener('click', () => maxItemsInput.select());
 
         budgetInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') {
@@ -1432,25 +1426,17 @@
         maxItemsInput.addEventListener('input', () => { triggerAutoRecommend(); saveState(); });
         lowHpInput.addEventListener('change', () => { triggerAutoRecommend(); saveState(); });
         stackRadios.forEach(radio => radio.addEventListener('change', () => { triggerAutoRecommend(); saveState(); }));
-        if (conditionalToggle) {
-            conditionalToggle.addEventListener('change', () => { calculate(); triggerAutoRecommend(); saveState(); });
-        }
-        if (tabButtons.length) {
-            tabButtons.forEach(btn => btn.addEventListener('click', () => {
-                if (!btn.classList.contains('active')) {
-                    activateTab(btn.dataset.tabTarget);
-                }
-            }));
-        }
+        vanadiumToggle.addEventListener('change', () => { calculate(); triggerAutoRecommend(); saveState(); });
+        crusaderToggle.addEventListener('change', () => { calculate(); triggerAutoRecommend(); saveState(); });
+        triageToggle.addEventListener('change', () => { calculate(); triggerAutoRecommend(); saveState(); });
 
         // 아이템 체크박스 변경 시
         includeInputs.forEach(input => {
             input.addEventListener('change', () => {
-                // 아마리 해독제 연동
                 if (input.dataset.name === '아마리의 해독제') {
                     lowHpInput.checked = input.checked;
                 }
-                calculate(); saveState(); // 모든 체크박스 변경 시 즉시 계산
+                calculate(); saveState();
             });
         });
         pinInputs.forEach(pin => pin.addEventListener('change', () => { triggerAutoRecommend(); saveState(); }));
@@ -1460,6 +1446,27 @@
             scenarioContent.style.display = isHidden ? '' : 'none';
             toggleScenarioBtn.textContent = isHidden ? '▼ 접기' : '▲ 펼치기';
         });
+
+        itemSearchInput.addEventListener('input', () => {
+            const searchTerm = itemSearchInput.value.toLowerCase().trim();
+            itemCards.forEach(item => {
+                const itemName = item.dataset.name.toLowerCase();
+                const isMatch = itemName.includes(searchTerm);
+                
+                item.style.display = 'grid'; // 항상 보이도록 설정
+
+                if (searchTerm === '') {
+                    item.style.order = '0';
+                } else {
+                    if (isMatch) {
+                        item.style.order = '-1'; // 일치하는 아이템을 위로
+                    } else {
+                        item.style.order = '0'; // 일치하지 않는 아이템은 기본 순서
+                    }
+                }
+            });
+        });
+
         window.addEventListener('beforeunload', saveState);
     }
 
