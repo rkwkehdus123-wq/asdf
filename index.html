@@ -213,6 +213,17 @@
         color: #fff;
         box-shadow: 0 0 14px rgba(233, 69, 96, 0.35);
     }
+    #toggleZeroStats {
+        background: rgba(92, 141, 255, 0.16);
+        border: 1px solid rgba(92, 141, 255, 0.35);
+        color: var(--text-color);
+    }
+    #toggleZeroStats[aria-pressed="true"] {
+        background: linear-gradient(135deg, rgba(92, 141, 255, 0.45), rgba(52, 94, 199, 0.65));
+        border-color: transparent;
+        color: #fff;
+        box-shadow: 0 0 14px rgba(92, 141, 255, 0.35);
+    }
     .item-category {
       margin-top: 2rem;
     }
@@ -616,6 +627,10 @@
           <input type="checkbox" id="chkCrusader">
           <label for="chkCrusader">성전사 유압 시스템</label>
         </div>
+        <div class="scen-item">
+          <input type="checkbox" id="chkSuperSerum">
+          <label for="chkSuperSerum">슈퍼 혈청 사용 효과</label>
+        </div>
       </div>
     </div>
   </div>
@@ -641,6 +656,7 @@
       <div class="item-list-actions">
         <input type="search" id="itemSearch" placeholder="아이템 검색...">
         <button id="editItems" type="button">아이템 목록 편집</button>
+        <button id="toggleZeroStats" type="button" class="toggle-zero-stats" hidden aria-pressed="false">무공/공속 없는 아이템 숨기기</button>
         <button id="calcItems" type="button">선택 아이템 계산</button>
       </div>
     </h2>
@@ -669,8 +685,10 @@
     const stackRadios = document.querySelectorAll('input[name="stack"]');
     const vanadiumToggle = document.getElementById('chkVanadium');
     const crusaderToggle = document.getElementById('chkCrusader');
+    const superSerumToggle = document.getElementById('chkSuperSerum');
     const triageToggle = document.getElementById('chkTriage');
     const editItemsBtn = document.getElementById('editItems');
+    const toggleZeroStatsBtn = document.getElementById('toggleZeroStats');
     const itemListEl = document.querySelector('.item-list');
     let itemCards = [];
 
@@ -771,20 +789,20 @@
         { name: '오군디무 감소장', price: 11000, wp: 0, as: 0, rarity: 'purple', description: '무공+0%, 공속+0%' },
       ],
       gadget: [
-        { name: '오라 격퇴', price: 1500, wp: 0, as: 0, rarity: 'green', description: '생명력+25. 사용 시: 8m 내 모든 적을 밀쳐냄 (재사용 대기시간 35초).' },
-        { name: '방벽 파편', price: 1500, wp: 0, as: 0, rarity: 'green', description: '생명력+25. 사용 시: 3초 동안 추가 생명력+50 (재사용 대기시간 45초).' },
-        { name: '외골격 스프링', price: 1500, wp: 0, as: 0, rarity: 'green', description: '생명력+25. 계속 웅크리면 다음 점프 높이 최대 250% 증가 (재사용 대기시간 20초).' },
-        { name: '깃털 달린 밑창', price: 1500, wp: 0, as: 0, rarity: 'green', description: '생명력+25. 사용 시: 5초 동안 이동 속도+25%, 피해 시 해제 (재사용 대기시간 20초).' },
-        { name: '구급상자', price: 1500, wp: 0, as: 0, rarity: 'green', description: '생명력+25. 사용 시: 10초 동안 초당 생명력 20 회복, 피해 시 해제 (재사용 대기시간 25초).' },
-        { name: '질주 스케이트', price: 3750, wp: 0, as: 0, rarity: 'blue', description: '생명력+25. 사용 시: 짧은 거리를 질주 (재사용 대기시간 20초).' },
-        { name: '야전 지원', price: 4000, wp: 5, as: 0, rarity: 'blue', description: '방어력+25. 무공+5%. 사용 시: 3초 동안 초당 생명력 50 회복 치유장 설치 (재사용 대기시간 20초).' },
-        { name: '여우님 파편', price: 4000, wp: 0, as: 0, rarity: 'blue', description: '보호막+25. 재사용 대기시간 감소 5%. 사용 시: 3초 동안 추가 생명력+50, 이동 속도+20%(약화 시 추가+100) (재사용 대기시간 35초).' },
-        { name: '카네자카 부적', price: 9000, wp: 0, as: 0, rarity: 'purple', description: '보호막+50. 해로운 효과 지속 시간 -40%. 사용 시: 대부분의 해로운 효과 정화, 생명력 75 회복, 0.65초 무적 및 이동 속도+75% (재사용 대기시간 45초).' },
-        { name: '제트 스케이팅', price: 9500, wp: 10, as: 0, rarity: 'purple', description: '생명력+25. 무공+10%. 기술 위력+10%. 사용 시: 짧은 거리를 질주 (재사용 대기시간 12초).' },
-        { name: '괴저 방지제', price: 10000, wp: 0, as: 0, rarity: 'purple', description: '보호막+50. 기술 위력+15%. 사용 시: 8m 내 모든 적 밀쳐내고 감속, 3초 동안 치유 감소 30% 적용 (재사용 대기시간 20초).' },
-        { name: '슈퍼 혈청', price: 10000, wp: 0, as: 10, rarity: 'purple', description: '생명력+25. 공속+10%. 무기 생명력 흡수 10%. 사용 시: 5초 동안 총 공속+50%, 무공-15%, 탄약 전부 재장전 (재사용 대기시간 35초).' },
-        { name: '거상 핵', price: 11000, wp: 0, as: 0, rarity: 'purple', description: '생명력/보호막/방어도+10%. 밀쳐내기/감속 저항+40%. 사용 시: 저지 불가, 피해 감소 25%, 최대 생명력+25%, 3초간 피해·치유량-50% (재사용 대기시간 45초).' },
-        { name: '재정비', price: 13000, wp: 0, as: 0, rarity: 'purple', description: '생명력+25. 사용 시: 모든 기술 재사용 대기시간 8초 감소 (재사용 대기시간 75초).' },
+        { name: '오라 격퇴', price: 1500, wp: 0, as: 0, rarity: 'green', description: '무공+0%, 공속+0%' },
+        { name: '방벽 파편', price: 1500, wp: 0, as: 0, rarity: 'green', description: '무공+0%, 공속+0%' },
+        { name: '외골격 스프링', price: 1500, wp: 0, as: 0, rarity: 'green', description: '무공+0%, 공속+0%' },
+        { name: '깃털 달린 밑창', price: 1500, wp: 0, as: 0, rarity: 'green', description: '무공+0%, 공속+0%' },
+        { name: '구급상자', price: 1500, wp: 0, as: 0, rarity: 'green', description: '무공+0%, 공속+0%' },
+        { name: '질주 스케이트', price: 3750, wp: 0, as: 0, rarity: 'blue', description: '무공+0%, 공속+0%' },
+        { name: '야전 지원', price: 4000, wp: 5, as: 0, rarity: 'blue', description: '무공+5%, 공속+0%' },
+        { name: '여우님 파편', price: 4000, wp: 0, as: 0, rarity: 'blue', description: '무공+0%, 공속+0%' },
+        { name: '카네자카 부적', price: 9000, wp: 0, as: 0, rarity: 'purple', description: '무공+0%, 공속+0%' },
+        { name: '제트 스케이팅', price: 9500, wp: 10, as: 0, rarity: 'purple', description: '무공+10%, 공속+0%' },
+        { name: '괴저 방지제', price: 10000, wp: 0, as: 0, rarity: 'purple', description: '무공+0%, 공속+0%' },
+        { name: '슈퍼 혈청', price: 10000, wp: 0, as: 10, rarity: 'purple', description: '무공+0%, 공속+10%', note: '조건부 (사용 시): 무공-15%, 공속+50%' },
+        { name: '거상 핵', price: 11000, wp: 0, as: 0, rarity: 'purple', description: '무공+0%, 공속+0%' },
+        { name: '재정비', price: 13000, wp: 0, as: 0, rarity: 'purple', description: '무공+0%, 공속+0%' },
       ],
     };
 
@@ -933,13 +951,49 @@
       item.dataset.hidden = hidden ? 'true' : 'false';
       if (hidden === currentlyHidden) {
         syncItemDisplay(item);
+        updateZeroStatButtonState();
         return;
       }
       syncItemDisplay(item);
+      updateZeroStatButtonState();
+    }
+
+    function isZeroStatItem(item) {
+      if (!item) return false;
+      const wp = Number(item.dataset.wp);
+      const as = Number(item.dataset.as);
+      const wpVal = Number.isFinite(wp) ? wp : 0;
+      const asVal = Number.isFinite(as) ? as : 0;
+      return wpVal === 0 && asVal === 0;
+    }
+
+    function getZeroStatItems() {
+      return itemCards.filter(isZeroStatItem);
+    }
+
+    function updateZeroStatButtonState() {
+      if (!toggleZeroStatsBtn) return;
+      const zeroItems = getZeroStatItems();
+      if (zeroItems.length === 0) {
+        toggleZeroStatsBtn.disabled = true;
+        toggleZeroStatsBtn.dataset.active = 'false';
+        toggleZeroStatsBtn.setAttribute('aria-pressed', 'false');
+        toggleZeroStatsBtn.textContent = '무공/공속 없는 아이템 숨기기';
+        toggleZeroStatsBtn.title = '무공과 공속이 모두 0인 아이템이 없습니다.';
+        return;
+      }
+
+      toggleZeroStatsBtn.disabled = false;
+      const allHidden = zeroItems.every(item => item.dataset.hidden === 'true');
+      toggleZeroStatsBtn.dataset.active = allHidden ? 'true' : 'false';
+      toggleZeroStatsBtn.setAttribute('aria-pressed', allHidden ? 'true' : 'false');
+      toggleZeroStatsBtn.textContent = allHidden ? '숨긴 아이템 복원' : '무공/공속 없는 아이템 숨기기';
+      toggleZeroStatsBtn.title = allHidden ? '숨긴 아이템을 다시 표시합니다.' : '무공과 공속이 모두 0인 아이템을 숨깁니다.';
     }
 
     function refreshItemVisibility() {
       itemCards.forEach(syncItemDisplay);
+      updateZeroStatButtonState();
     }
 
     function applyHiddenStateFromStorage() {
@@ -959,6 +1013,10 @@
         editItemsBtn.textContent = '편집 완료';
         editItemsBtn.setAttribute('aria-pressed', 'true');
       }
+      if (toggleZeroStatsBtn) {
+        toggleZeroStatsBtn.hidden = false;
+        updateZeroStatButtonState();
+      }
       refreshItemVisibility();
     }
 
@@ -969,6 +1027,9 @@
       if (editItemsBtn) {
         editItemsBtn.textContent = '아이템 목록 편집';
         editItemsBtn.setAttribute('aria-pressed', 'false');
+      }
+      if (toggleZeroStatsBtn) {
+        toggleZeroStatsBtn.hidden = true;
       }
       refreshItemVisibility();
     }
@@ -1002,6 +1063,7 @@
           pins,
           vanadiumActive: vanadiumToggle.checked,
           crusaderActive: crusaderToggle.checked,
+          superSerumActive: superSerumToggle ? superSerumToggle.checked : false,
           triageActive: triageToggle.checked,
           hiddenItems,
         };
@@ -1023,6 +1085,7 @@
         }
         if (typeof data.vanadiumActive === 'boolean') vanadiumToggle.checked = data.vanadiumActive;
         if (typeof data.crusaderActive === 'boolean') crusaderToggle.checked = data.crusaderActive;
+        if (typeof data.superSerumActive === 'boolean' && superSerumToggle) superSerumToggle.checked = data.superSerumActive;
         if (typeof data.triageActive === 'boolean') triageToggle.checked = data.triageActive;
 
         includeInputs.forEach(i => i.checked = false);
@@ -1070,8 +1133,8 @@
             const firstLine = (segments.shift() || '').trim();
             let statsHtml = segments.join('<br>').trim();
             
-            statsHtml = statsHtml.replace(/(무공\s*\+\s*\d+%)/g, '<span class="stat-highlight">$1</span>');
-            statsHtml = statsHtml.replace(/(공속\s*\+\s*\d+%)/g, '<span class="stat-highlight">$1</span>');
+            statsHtml = statsHtml.replace(/(무공\s*[+-]?\s*\d+%)/g, '<span class="stat-highlight">$1</span>');
+            statsHtml = statsHtml.replace(/(공속\s*[+-]?\s*\d+%)/g, '<span class="stat-highlight">$1</span>');
 
             const priceNumber = Number(item.dataset.price);
             const hasValidPrice = Number.isFinite(priceNumber);
@@ -1125,7 +1188,11 @@
       if (base.name === '성전사 유압 시스템' && crusaderToggle.checked) {
         as += 5;
       }
-      
+      if (base.name === '슈퍼 혈청' && superSerumToggle && superSerumToggle.checked) {
+        wp -= 15;
+        as += 50;
+      }
+
       return { ...base, wp, as };
     }
 
@@ -1469,6 +1536,9 @@
         stackRadios.forEach(radio => radio.addEventListener('change', () => { triggerAutoRecommend(); saveState(); }));
         vanadiumToggle.addEventListener('change', () => { calculate(); triggerAutoRecommend(); saveState(); });
         crusaderToggle.addEventListener('change', () => { calculate(); triggerAutoRecommend(); saveState(); });
+        if (superSerumToggle) {
+            superSerumToggle.addEventListener('change', () => { calculate(); triggerAutoRecommend(); saveState(); });
+        }
         triageToggle.addEventListener('change', () => { calculate(); triggerAutoRecommend(); saveState(); });
 
         // 아이템 체크박스 변경 시
@@ -1509,6 +1579,17 @@
         });
 
         window.addEventListener('beforeunload', saveState);
+
+        if (toggleZeroStatsBtn) {
+            toggleZeroStatsBtn.addEventListener('click', () => {
+                const zeroItems = getZeroStatItems();
+                if (zeroItems.length === 0) return;
+                const shouldHide = toggleZeroStatsBtn.dataset.active !== 'true';
+                zeroItems.forEach(item => setItemHiddenState(item, shouldHide));
+                refreshItemVisibility();
+                saveState();
+            });
+        }
     }
 
     // 페이지 로드 완료 후 실행
