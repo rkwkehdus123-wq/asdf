@@ -739,7 +739,7 @@
         { name: '장거리 날개', price: 4000, wp: 0, as: 0, rarity: 'blue', description: '무공+0%, 공속+0%'},
         { name: '다용도 도구', price: 4500, wp: 0, as: 0, rarity: 'blue', description: '무공+0%, 공속+0%' },
         { name: '활력 증폭기', price: 5000, wp: 0, as: 0, rarity: 'blue', description: '무공+0%, 공속+0%' },
-        { name: '나노 콜라', price: 6000, wp: 0, as: 0, rarity: 'blue', description: '무공+0%, 공속+0%' },
+        { name: '나노 콜라', price: 5500, wp: 0, as: 0, rarity: 'blue', description: '무공+0%, 공속+0%' },
         { name: '축복받은 부스터', price: 9000, wp: 0, as: 0, rarity: 'purple', description: '무공+0%, 공속+0%'},
         { name: '음파 재충전', price: 9000, wp: 0, as: 0, rarity: 'purple', description: '무공+0%, 공속+0%' },
         { name: '3연속 토미건 발사', price: 9500, wp: 0, as: 10, rarity: 'purple', description: '공속+10%' },
@@ -749,11 +749,11 @@
         { name: '촉매 수정', price: 10000, wp: 0, as: 0, rarity: 'purple', description: '무공+0%, 공속+0%' },
         { name: '부활 거리 측정기', price: 10000, wp: 0, as: 0, rarity: 'purple', description: '무공+0%, 공속+0%'},
         { name: '사이버베놈', price: 10500, wp: 0, as: 0, rarity: 'purple', description: '무공+0%, 공속+0%' },
-        { name: '광채 눈동자', price: 11000, wp: 0, as: 0, rarity: 'purple', description: '무공+0%, 공속+0%' },
+        { name: '광채 눈동자', price: 12000, wp: 0, as: 0, rarity: 'purple', description: '무공+0%, 공속+0%' },
         { name: '액체질소', price: 11000, wp: 0, as: 0, rarity: 'purple', description: '무공+0%, 공속+0%' },
         { name: '여우의 징표', price: 11000, wp: 0, as: 0, rarity: 'purple', description: '무공+0%, 공속+0%' },
         { name: '천사의 곡예', price: 11000, wp: 0, as: 0, rarity: 'purple', description: '무공+0%, 공속+0%'},
-        { name: '챔피언의 도구', price: 14000, wp: 0, as: 0, rarity: 'purple', description: '무공+0%, 공속+0%' },
+        { name: '챔피언의 도구', price: 14500, wp: 0, as: 0, rarity: 'purple', description: '무공+0%, 공속+0%' },
       ],
       survival: [
         { name: '러닝화', price: 1000, wp: 0, as: 0, rarity: 'green', description: '무공+0%, 공속+0%' },
@@ -797,16 +797,17 @@
         { name: '질주 스케이트', price: 3750, wp: 0, as: 0, rarity: 'blue', description: '무공+0%, 공속+0%' },
         { name: '야전 지원', price: 4000, wp: 5, as: 0, rarity: 'blue', description: '무공+5%, 공속+0%' },
         { name: '여우님 파편', price: 4000, wp: 0, as: 0, rarity: 'blue', description: '무공+0%, 공속+0%' },
-        { name: '카네자카 부적', price: 9000, wp: 0, as: 0, rarity: 'purple', description: '무공+0%, 공속+0%' },
+        { name: '여우님 부적', price: 9000, wp: 0, as: 0, rarity: 'purple', description: '무공+0%, 공속+0%' },
         { name: '제트 스케이팅', price: 9500, wp: 10, as: 0, rarity: 'purple', description: '무공+10%, 공속+0%' },
-        { name: '괴저 방지제', price: 10000, wp: 0, as: 0, rarity: 'purple', description: '무공+0%, 공속+0%' },
+        { name: '괴저 방지제', price: 9000, wp: 0, as: 0, rarity: 'purple', description: '무공+0%, 공속+0%' },
         { name: '슈퍼 혈청', price: 10000, wp: 0, as: 10, rarity: 'purple', description: '무공+0%, 공속+10%', note: '조건부 활성화 시 무공-15%, 공속+50%' },
-        { name: '거상 핵', price: 11000, wp: 0, as: 0, rarity: 'purple', description: '무공+0%, 공속+0%' },
+        { name: '거상 핵', price: 9500, wp: 0, as: 0, rarity: 'purple', description: '무공+0%, 공속+0%' },
         { name: '재정비', price: 13000, wp: 0, as: 0, rarity: 'purple', description: '무공+0%, 공속+0%' },
       ],
     };
 
     const slugify = (name = '') => name.replace(/\s+/g, '');
+    const rarityOrder = { green: 0, blue: 1, purple: 2 };
 
     function createItemCard(item, categoryKey) {
       const card = document.createElement('div');
@@ -870,7 +871,13 @@
         const contentGrid = document.createElement('div');
         contentGrid.className = 'item-list-content';
         
-        items.forEach(item => {
+        const sortedItems = [...items].sort((a, b) => {
+          const rarityDiff = (rarityOrder[a.rarity] ?? 0) - (rarityOrder[b.rarity] ?? 0);
+          if (rarityDiff !== 0) return rarityDiff;
+          return a.price - b.price;
+        });
+
+        sortedItems.forEach(item => {
           contentGrid.appendChild(createItemCard(item, categoryKey));
         });
 
