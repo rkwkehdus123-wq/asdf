@@ -582,6 +582,20 @@
     /* Tooltip(help) */
     .am-scenarios .scen-item label .help { display:inline-flex; align-items:center; justify-content:center; width:1.05rem; height:1.05rem; margin-left:.35rem; border-radius:50%; border:1px solid var(--border-color); background:rgba(255,255,255,.06); font-weight:700; font-size:.78rem; line-height:1; cursor:help; }
 
+  
+    #manageItems, #exportProfile, #importProfile, #shareSettings {
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.2);
+      color: var(--text-color);
+    }
+    .modal { position: fixed; inset: 0; background: rgba(0,0,0,.65); z-index: 50; display:flex; align-items:center; justify-content:center; padding:1rem; }
+    .modal-content { width:min(1200px,95vw); max-height:90vh; overflow:auto; background:var(--card-bg); border:1px solid var(--border-color); border-radius:12px; padding:1rem; }
+    .modal-actions { display:flex; gap:.5rem; flex-wrap:wrap; margin-bottom:.75rem; }
+    .table-wrap { overflow:auto; }
+    #itemManagerTable th, #itemManagerTable td { font-size:.85rem; padding:.35rem; }
+    #itemManagerTable input[type="text"], #itemManagerTable input[type="number"], #itemManagerTable select { width:100%; box-sizing:border-box; max-width:none; }
+    #itemManagerTable tr.selected { outline: 2px solid var(--secondary-color); }
+
   </style>
 </head>
 <body>
@@ -656,6 +670,10 @@
       <div class="item-list-actions">
         <input type="search" id="itemSearch" placeholder="아이템 검색...">
         <button id="editItems" type="button">아이템 목록 편집</button>
+        <button id="manageItems" type="button">아이템 관리</button>
+        <button id="exportProfile" type="button">프로필 내보내기</button>
+        <button id="importProfile" type="button">프로필 불러오기</button>
+        <button id="shareSettings" type="button">설정 링크 생성</button>
         <button id="toggleZeroStats" type="button" class="toggle-zero-stats" hidden aria-pressed="false">무공/공속 없는 아이템 숨기기</button>
         <button id="calcItems" type="button">선택 아이템 계산</button>
       </div>
@@ -663,6 +681,26 @@
 
     <div id="item-container">
       <!-- Items will be injected here by JavaScript -->
+    </div>
+  </div>
+</div>
+
+<div id="itemManagerModal" class="modal" hidden>
+  <div class="modal-content">
+    <h3>아이템 관리</h3>
+    <div class="modal-actions">
+      <button id="itemAddRow" type="button">아이템 추가</button>
+      <button id="itemDuplicateRow" type="button">복제</button>
+      <button id="itemDeleteRow" type="button">삭제</button>
+      <button id="itemRestoreDefaults" type="button">기본값 복구</button>
+      <button id="itemApplyChanges" type="button">적용</button>
+      <button id="itemCloseModal" type="button">닫기</button>
+    </div>
+    <div class="table-wrap">
+      <table id="itemManagerTable">
+        <thead><tr><th></th><th>category</th><th>name</th><th>price</th><th>wp</th><th>as</th><th>rarity</th><th>fixedOnly</th><th>description</th><th>tags(,구분)</th></tr></thead>
+        <tbody></tbody>
+      </table>
     </div>
   </div>
 </div>
@@ -688,8 +726,14 @@
     const superSerumToggle = document.getElementById('chkSuperSerum');
     const triageToggle = document.getElementById('chkTriage');
     const editItemsBtn = document.getElementById('editItems');
+    const manageItemsBtn = document.getElementById('manageItems');
+    const exportProfileBtn = document.getElementById('exportProfile');
+    const importProfileBtn = document.getElementById('importProfile');
+    const shareSettingsBtn = document.getElementById('shareSettings');
     const toggleZeroStatsBtn = document.getElementById('toggleZeroStats');
     const itemListEl = document.querySelector('.item-list');
+    const itemManagerModal = document.getElementById('itemManagerModal');
+    const itemManagerTbody = document.querySelector('#itemManagerTable tbody');
     let itemCards = [];
 
     const totalPriceEl = document.getElementById('totalPrice');
@@ -700,7 +744,7 @@
 
     let isCalculating = false;
 
-    const itemData = {
+    const defaultItemData = {
       weapon: [
         { name: '무기 기름칠', price: 1000, wp: 0, as: 5, rarity: 'green', description: '공속+5%' },
         { name: '보정기', price: 1000, wp: 5, as: 0, rarity: 'green', description: '무공+5%' },
@@ -806,20 +850,78 @@
       ],
     };
 
-    const slugify = (name = '') => name.replace(/\s+/g, '');
+    const slugify = (name = '') => name.toString().toLowerCase().replace(/[^a-z0-9가-힣]+/g, '-').replace(/^-+|-+$/g, '') || 'item';
+    let itemIdSeq = 1;
+    function createItemId(seed = 'item') {
+      const id = `${slugify(seed)}-${itemIdSeq++}`;
+      return id;
+    }
+    function normalizeItem(raw, categoryKey, fallbackSeed = 'item') {
+      const raritySet = new Set(['green', 'blue', 'purple']);
+      const tags = Array.isArray(raw.tags) ? raw.tags : (typeof raw.tags === 'string' ? raw.tags.split(',') : []);
+      const cleanTags = [...new Set(tags.map(tag => String(tag || '').trim().toLowerCase()).filter(Boolean))];
+      const item = {
+        id: String(raw.id || createItemId(raw.name || fallbackSeed)),
+        name: String(raw.name || fallbackSeed),
+        price: Number(raw.price) || 0,
+        wp: Number(raw.wp) || 0,
+        as: Number(raw.as) || 0,
+        rarity: raritySet.has(raw.rarity) ? raw.rarity : 'green',
+        fixedOnly: !!raw.fixedOnly,
+        description: String(raw.description || ''),
+        note: raw.note ? String(raw.note) : '',
+        tags: cleanTags,
+      };
+      item.category = categoryKey;
+      return item;
+    }
+    function normalizeItemData(dataObj) {
+      const categories = ['weapon','tech','survival','gadget'];
+      const out = {};
+      const used = new Set();
+      categories.forEach(cat => {
+        const rows = Array.isArray(dataObj?.[cat]) ? dataObj[cat] : [];
+        out[cat] = rows.map((row, idx) => normalizeItem(row, cat, `${cat}-${idx+1}`)).map(row => {
+          if (used.has(row.id)) row.id = createItemId(row.name);
+          used.add(row.id);
+          return row;
+        });
+      });
+      return out;
+    }
+    const specialTagAliases = {
+      '아마리의 해독제': 'amari',
+      '강화광 가속기': 'accelerator',
+      '바나듐 주사': 'vanadium',
+      '성전사 유압 시스템': 'crusader',
+      '슈퍼 혈청': 'super_serum'
+    };
+    function injectDefaultTags(dataObj) {
+      Object.values(dataObj).forEach(items => {
+        items.forEach(item => {
+          const alias = specialTagAliases[item.name];
+          if (alias && !item.tags.includes(alias)) item.tags.push(alias);
+        });
+      });
+      return dataObj;
+    }
+    let itemData = injectDefaultTags(normalizeItemData(structuredClone(defaultItemData)));
+
     const rarityOrder = { green: 0, blue: 1, purple: 2 };
 
     function createItemCard(item, categoryKey) {
       const card = document.createElement('div');
-      const idBase = item.id || slugify(item.name);
+      const idBase = item.id || createItemId(item.name);
       card.className = `item ${item.rarity}`;
       card.id = `item-${idBase}`;
+      card.dataset.id = idBase;
       card.dataset.name = item.name;
       card.dataset.price = String(item.price);
       card.dataset.wp = String(item.wp);
       card.dataset.as = String(item.as);
       card.dataset.category = categoryKey;
       card.dataset.rarity = item.rarity;
+      card.dataset.tags = (item.tags || []).join(',');
       if (item.fixedOnly) {
         card.dataset.fixedOnly = 'true';
       }
@@ -891,23 +993,51 @@
       pinInputs = Array.from(document.querySelectorAll('.pin'));
       itemCards = Array.from(document.querySelectorAll('.item-list .item'));
     }
+    function rerenderItems() {
+      renderItems();
+      refreshItemReferences();
+      syncInputDatasets();
+      formatItemPrices();
+      setupItemVisibilityControls();
+      attachItemInputListeners();
+      refreshItemVisibility();
+    }
 
-    renderItems();
-    refreshItemReferences();
+    rerenderItems();
 
     // --- 상수 정의 ---
     const baseHealing = 60;
     let debounceTimer;
-    let hiddenItemNames = new Set();
+    let hiddenItemIds = new Set();
     let isEditingItems = false;
 
-    includeInputs.forEach((input, idx) => {
-      const data = getItemData(input);
-      input.dataset.name = data.name;
-      if (pinInputs[idx]) {
-        pinInputs[idx].dataset.name = data.name;
-      }
-    });
+    function syncInputDatasets() {
+      includeInputs.forEach((input, idx) => {
+        const data = getItemData(input);
+        input.dataset.id = data.id;
+        input.dataset.name = data.name;
+        if (pinInputs[idx]) {
+          pinInputs[idx].dataset.id = data.id;
+          pinInputs[idx].dataset.name = data.name;
+        }
+      });
+    }
+    function attachItemInputListeners() {
+      includeInputs.forEach(input => {
+        input.onchange = () => {
+          if (getItemData(input).tags.includes('amari')) {
+            lowHpInput.checked = input.checked;
+          }
+          calculate();
+          saveState();
+        };
+      });
+      pinInputs.forEach(pin => {
+        pin.onchange = () => { triggerAutoRecommend(); saveState(); };
+      });
+    }
+
+    syncInputDatasets();
 
     function setupItemVisibilityControls() {
       itemCards.forEach(item => {
@@ -948,11 +1078,11 @@
 
     function setItemHiddenState(item, hidden) {
       if (!item) return;
-      const name = item.dataset.name || '';
+      const id = item.dataset.id || '';
       if (hidden) {
-        if (name) hiddenItemNames.add(name);
-      } else if (name) {
-        hiddenItemNames.delete(name);
+        if (id) hiddenItemIds.add(id);
+      } else if (id) {
+        hiddenItemIds.delete(id);
       }
       const currentlyHidden = item.dataset.hidden === 'true';
       item.dataset.hidden = hidden ? 'true' : 'false';
@@ -1005,8 +1135,8 @@
 
     function applyHiddenStateFromStorage() {
       itemCards.forEach(item => {
-        const name = item.dataset.name || '';
-        const shouldHide = name ? hiddenItemNames.has(name) : false;
+        const id = item.dataset.id || '';
+        const shouldHide = id ? hiddenItemIds.has(id) : false;
         setItemHiddenState(item, shouldHide);
       });
       refreshItemVisibility();
@@ -1050,41 +1180,51 @@
     }
 
     // --- 상태 저장(LocalStorage) ---
-    const STORAGE_KEY = 'mercy_heal_calc_v1';
+    const STORAGE_KEY = 'mercy_heal_calc_v2';
+    const PROFILE_SCHEMA_VERSION = 1;
+
+    function buildProfileData(includeItems = true) {
+      const includes = includeInputs.filter(i => i.checked).map(i => i.dataset.id).filter(Boolean);
+      const pins = pinInputs.map((p, idx) => p.checked ? includeInputs[idx].dataset.id : null).filter(Boolean);
+      const stackSel = document.querySelector('input[name="stack"]:checked');
+      const hiddenItems = itemCards
+        .filter(item => item.dataset.hidden === 'true')
+        .map(item => item.dataset.id)
+        .filter(Boolean);
+      return {
+        schemaVersion: PROFILE_SCHEMA_VERSION,
+        budget: +budgetInput.value || 0,
+        maxItems: +maxItemsInput.value || 6,
+        lowHp: !!lowHpInput.checked,
+        stackId: stackSel ? stackSel.id : 'stack-none',
+        includes,
+        pins,
+        vanadiumActive: vanadiumToggle.checked,
+        crusaderActive: crusaderToggle.checked,
+        superSerumActive: superSerumToggle ? superSerumToggle.checked : false,
+        triageActive: triageToggle.checked,
+        hiddenItems,
+        items: includeItems ? itemData : undefined,
+      };
+    }
 
     function saveState() {
       try {
-        const includes = includeInputs.filter(i => i.checked).map(i => i.dataset.name).filter(Boolean);
-        const pins = pinInputs.map((p, idx) => p.checked ? includeInputs[idx].dataset.name : null).filter(Boolean);
-        const stackSel = document.querySelector('input[name="stack"]:checked');
-        const hiddenItems = itemCards
-          .filter(item => item.dataset.hidden === 'true')
-          .map(item => item.dataset.name)
-          .filter(Boolean);
-        const data = {
-          budget: +budgetInput.value || 0,
-          maxItems: +maxItemsInput.value || 6,
-          lowHp: !!lowHpInput.checked,
-          stackId: stackSel ? stackSel.id : 'stack-none',
-          includes,
-          pins,
-          vanadiumActive: vanadiumToggle.checked,
-          crusaderActive: crusaderToggle.checked,
-          superSerumActive: superSerumToggle ? superSerumToggle.checked : false,
-          triageActive: triageToggle.checked,
-          hiddenItems,
-        };
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(buildProfileData(true)));
       } catch (e) { /* noop */ }
     }
 
-    function loadState() {
+    function applyProfileData(data, options = {}) {
       try {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        if (!raw) return;
-        const data = JSON.parse(raw);
-        if (data.budget != null) budgetInput.value = data.budget;
-        if (data.maxItems != null) maxItemsInput.value = data.maxItems;
+        if (!data || typeof data !== 'object') return;
+        const shouldApplyItems = options.applyItems !== false;
+        if (data.schemaVersion !== PROFILE_SCHEMA_VERSION) return;
+        if (shouldApplyItems && data.items && typeof data.items === 'object') {
+          itemData = injectDefaultTags(normalizeItemData(data.items));
+          rerenderItems();
+        }
+        if (data.budget != null) budgetInput.value = Number(data.budget) || 0;
+        if (data.maxItems != null) maxItemsInput.value = Number(data.maxItems) || 6;
         if (typeof data.lowHp === 'boolean') lowHpInput.checked = data.lowHp;
         if (data.stackId) {
           const r = document.getElementById(data.stackId);
@@ -1097,20 +1237,49 @@
 
         includeInputs.forEach(i => i.checked = false);
         pinInputs.forEach(p => p.checked = false);
-        if (Array.isArray(data.includes)) {
-          includeInputs.forEach(i => { if (data.includes.includes(i.dataset.name)) i.checked = true; });
+        const includes = Array.isArray(data.includes) ? data.includes.map(String) : [];
+        const pins = Array.isArray(data.pins) ? data.pins.map(String) : [];
+        includeInputs.forEach(i => { if (includes.includes(i.dataset.id)) i.checked = true; });
+        pinInputs.forEach((p, idx) => { if (pins.includes(includeInputs[idx].dataset.id)) p.checked = true; });
+        hiddenItemIds = new Set(Array.isArray(data.hiddenItems) ? data.hiddenItems.map(String) : []);
+        applyHiddenStateFromStorage();
+        enforceFixedOnlyRules();
+        calculate(true);
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    function loadState() {
+      try {
+        const hashRaw = location.hash.startsWith('#profile=') ? location.hash.slice(9) : '';
+        if (hashRaw) {
+          const parsed = decodeProfile(hashRaw);
+          if (parsed) {
+            applyProfileData(parsed, { applyItems: false });
+            return;
+          }
         }
-        if (Array.isArray(data.pins)) {
-          pinInputs.forEach((p, idx) => { if (data.pins.includes(includeInputs[idx].dataset.name)) p.checked = true; });
-        }
-        if (Array.isArray(data.hiddenItems)) {
-          hiddenItemNames = new Set(data.hiddenItems);
-        } else {
-          hiddenItemNames = new Set();
-        }
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return;
+        applyProfileData(JSON.parse(raw), { applyItems: true });
       } catch (e) { /* noop */ }
     }
 
+    function encodeProfile(data) {
+      const json = JSON.stringify(data);
+      return btoa(unescape(encodeURIComponent(json))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+    }
+    function decodeProfile(code) {
+      try {
+        const pad = code + '==='.slice((code.length + 3) % 4);
+        const base64 = pad.replace(/-/g, '+').replace(/_/g, '/');
+        const json = decodeURIComponent(escape(atob(base64)));
+        return JSON.parse(json);
+      } catch (e) {
+        return null;
+      }
+    }
     // --- 초기화 함수 ---
     function initialize() {
         formatItemPrices();
@@ -1175,12 +1344,18 @@
     /** 주어진 포함 체크박스에서 아이템 데이터를 읽어옵니다 (부모 .item의 data-* 사용) */
     function getItemData(inputEl){
       const itemEl = inputEl.closest('.item');
-      if(!itemEl) return { name:'', price:0, wp:0, as:0 };
+      if(!itemEl) return { id:'', name:'', price:0, wp:0, as:0, tags:[] };
+      const id = itemEl.dataset.id || '';
       const name = itemEl.dataset.name || '';
       const price = +(itemEl.dataset.price || 0);
       const wp = +(itemEl.dataset.wp || 0);
       const as = +(itemEl.dataset.as || 0);
-      return { name, price, wp, as };
+      const tags = (itemEl.dataset.tags || '').split(',').map(v => v.trim()).filter(Boolean);
+      return { id, name, price, wp, as, tags };
+    }
+
+    function hasTag(item, tag) {
+      return Array.isArray(item.tags) && item.tags.includes(tag);
     }
 
     function getEffectiveStats(inputEl) {
@@ -1188,14 +1363,14 @@
       let wp = base.wp;
       let as = base.as;
       
-      if (base.name === '바나듐 주사' && vanadiumToggle.checked) {
+      if (hasTag(base, 'vanadium') && vanadiumToggle.checked) {
         wp += 10;
         as += 10;
       }
-      if (base.name === '성전사 유압 시스템' && crusaderToggle.checked) {
+      if (hasTag(base, 'crusader') && crusaderToggle.checked) {
         as += 5;
       }
-      if (base.name === '슈퍼 혈청' && superSerumToggle && superSerumToggle.checked) {
+      if (hasTag(base, 'super_serum') && superSerumToggle && superSerumToggle.checked) {
         wp -= 15;
         as += 50;
       }
@@ -1232,8 +1407,8 @@
             totalPrice += d.price;
             wp += d.wp;
             aspd += d.as;
-            if (d.name === '강화광 가속기') hasAccelerator = true;
-            if (d.name === '아마리의 해독제') hasAmari = true;
+            if (hasTag(d, 'accelerator')) hasAccelerator = true;
+            if (hasTag(d, 'amari')) hasAmari = true;
         });
         
         if (hasAccelerator) {
@@ -1326,8 +1501,8 @@
           const pinnedCost = pinnedStats.reduce((sum, d) => sum + d.price, 0);
           const pinnedWp = pinnedStats.reduce((sum, d) => sum + d.wp, 0);
           const pinnedAs = pinnedStats.reduce((sum, d) => sum + d.as, 0);
-          const pinnedHasAm = pinnedStats.some(d => d.name === '아마리의 해독제');
-          const pinnedHasAccelerator = pinnedStats.some(d => d.name === '강화광 가속기');
+          const pinnedHasAm = pinnedStats.some(d => hasTag(d, 'amari'));
+          const pinnedHasAccelerator = pinnedStats.some(d => hasTag(d, 'accelerator'));
 
           const budgetLeft = budget - pinnedCost;
           const slotsLeft = maxItems - pinned.length;
@@ -1403,8 +1578,8 @@
                   const nextState = {
                     wp: state.wp + stats.wp,
                     as: state.as + stats.as,
-                    hasAm: state.hasAm || stats.name === '아마리의 해독제',
-                    hasAccelerator: state.hasAccelerator || stats.name === '강화광 가속기',
+                    hasAm: state.hasAm || hasTag(stats, 'amari'),
+                    hasAccelerator: state.hasAccelerator || hasTag(stats, 'accelerator'),
                     items: state.items.concat(input)
                   };
                   nextState.heal = evaluateState(nextState);
@@ -1486,7 +1661,7 @@
           return;
         }
         const { stackBonus } = getScenarioBonus();
-        const hasAcceleratorInCombo = combo.some(i => getItemData(i).name === '강화광 가속기');
+        const hasAcceleratorInCombo = combo.some(i => hasTag(getItemData(i), 'accelerator'));
 
         combo.forEach(i => {
           const tr = document.createElement('tr');
@@ -1498,7 +1673,7 @@
           const base = getItemData(i);
           const stats = getEffectiveStats(i);
           let wpVal = stats.wp;
-          if (base.name === '강화광 가속기' && hasAcceleratorInCombo) {
+          if (hasTag(base, 'accelerator') && hasAcceleratorInCombo) {
              wpVal += stackBonus;
           }
           const nameHtml = isPinned ? `<span title="고정 아이템" aria-label="고정 아이템" style="width:.55rem;height:.55rem;border-radius:50%;background:linear-gradient(135deg,#f1c40f,#f39c12);box-shadow:0 0 5px rgba(241,196,15,.35);display:inline-block;margin-right:.35rem;vertical-align:-1px;"></span>${base.name}` : base.name;
@@ -1511,6 +1686,65 @@
           bestComboTbody.appendChild(tr);
         });
     }
+
+
+    function readManagerRows() {
+      const rows = Array.from(itemManagerTbody.querySelectorAll('tr'));
+      const grouped = { weapon: [], tech: [], survival: [], gadget: [] };
+      rows.forEach(tr => {
+        const get = (sel) => tr.querySelector(sel);
+        const category = get('[name="category"]').value;
+        if (!grouped[category]) return;
+        grouped[category].push(normalizeItem({
+          id: get('[name="id"]').value,
+          name: get('[name="name"]').value,
+          price: get('[name="price"]').value,
+          wp: get('[name="wp"]').value,
+          as: get('[name="as"]').value,
+          rarity: get('[name="rarity"]').value,
+          fixedOnly: get('[name="fixedOnly"]').checked,
+          description: get('[name="description"]').value,
+          tags: get('[name="tags"]').value,
+        }, category, 'new-item'));
+      });
+      return injectDefaultTags(normalizeItemData(grouped));
+    }
+    function createManagerRow(item) {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td><input type="radio" name="managerSel"></td>
+        <td><select name="category"><option value="weapon">weapon</option><option value="tech">tech</option><option value="survival">survival</option><option value="gadget">gadget</option></select></td>
+        <td><input type="text" name="name"></td>
+        <td><input type="number" name="price"></td>
+        <td><input type="number" name="wp"></td>
+        <td><input type="number" name="as"></td>
+        <td><select name="rarity"><option value="green">green</option><option value="blue">blue</option><option value="purple">purple</option></select></td>
+        <td><input type="checkbox" name="fixedOnly"></td>
+        <td><input type="text" name="description"></td>
+        <td><input type="text" name="tags"></td>
+        <input type="hidden" name="id">`;
+      tr.querySelector('[name="id"]').value = item.id || createItemId(item.name || 'item');
+      tr.querySelector('[name="category"]').value = item.category || 'weapon';
+      tr.querySelector('[name="name"]').value = item.name || '';
+      tr.querySelector('[name="price"]').value = Number(item.price) || 0;
+      tr.querySelector('[name="wp"]').value = Number(item.wp) || 0;
+      tr.querySelector('[name="as"]').value = Number(item.as) || 0;
+      tr.querySelector('[name="rarity"]').value = item.rarity || 'green';
+      tr.querySelector('[name="fixedOnly"]').checked = !!item.fixedOnly;
+      tr.querySelector('[name="description"]').value = item.description || '';
+      tr.querySelector('[name="tags"]').value = (item.tags || []).join(',');
+      tr.addEventListener('click', () => {
+        itemManagerTbody.querySelectorAll('tr').forEach(r => r.classList.remove('selected'));
+        tr.classList.add('selected');
+        tr.querySelector('input[type="radio"]').checked = true;
+      });
+      return tr;
+    }
+    function openItemManager() {
+      itemManagerTbody.innerHTML = '';
+      Object.entries(itemData).forEach(([cat, items]) => items.forEach(item => itemManagerTbody.appendChild(createManagerRow({ ...item, category: cat }))));
+      itemManagerModal.hidden = false;
+    }
+    function closeItemManager() { itemManagerModal.hidden = true; }
 
     /** 자동 추천을 위한 디바운스 핸들러 */
     function triggerAutoRecommend() {
@@ -1525,6 +1759,64 @@
         if (editItemsBtn) {
             editItemsBtn.addEventListener('click', toggleEditMode);
         }
+        if (manageItemsBtn) manageItemsBtn.addEventListener('click', openItemManager);
+        document.getElementById('itemCloseModal')?.addEventListener('click', closeItemManager);
+        document.getElementById('itemAddRow')?.addEventListener('click', () => itemManagerTbody.appendChild(createManagerRow({ category: 'weapon', rarity: 'green' })));
+        document.getElementById('itemDeleteRow')?.addEventListener('click', () => {
+          const row = itemManagerTbody.querySelector('input[name="managerSel"]:checked')?.closest('tr');
+          if (row) row.remove();
+        });
+        document.getElementById('itemDuplicateRow')?.addEventListener('click', () => {
+          const row = itemManagerTbody.querySelector('input[name="managerSel"]:checked')?.closest('tr');
+          if (!row) return;
+          const item = normalizeItem({
+            id: '',
+            name: row.querySelector('[name="name"]').value,
+            price: row.querySelector('[name="price"]').value,
+            wp: row.querySelector('[name="wp"]').value,
+            as: row.querySelector('[name="as"]').value,
+            rarity: row.querySelector('[name="rarity"]').value,
+            fixedOnly: row.querySelector('[name="fixedOnly"]').checked,
+            description: row.querySelector('[name="description"]').value,
+            tags: row.querySelector('[name="tags"]').value,
+          }, row.querySelector('[name="category"]').value, 'dup');
+          itemManagerTbody.appendChild(createManagerRow(item));
+        });
+        document.getElementById('itemRestoreDefaults')?.addEventListener('click', () => {
+          itemData = injectDefaultTags(normalizeItemData(structuredClone(defaultItemData)));
+          closeItemManager();
+          rerenderItems();
+          applyHiddenStateFromStorage();
+          calculate(true);
+          saveState();
+        });
+        document.getElementById('itemApplyChanges')?.addEventListener('click', () => {
+          const prev = buildProfileData(false);
+          itemData = readManagerRows();
+          closeItemManager();
+          rerenderItems();
+          applyProfileData(prev, { applyItems: false });
+          saveState();
+        });
+        if (exportProfileBtn) exportProfileBtn.addEventListener('click', async () => {
+          const code = encodeProfile(buildProfileData(true));
+          await navigator.clipboard.writeText(code);
+          alert('프로필 코드가 복사되었습니다.');
+        });
+        if (importProfileBtn) importProfileBtn.addEventListener('click', () => {
+          const code = prompt('프로필 코드를 붙여넣으세요');
+          if (!code) return;
+          const parsed = decodeProfile(code.trim());
+          if (!parsed) { alert('코드 파싱에 실패했습니다.'); return; }
+          applyProfileData(parsed, { applyItems: true });
+          saveState();
+        });
+        if (shareSettingsBtn) shareSettingsBtn.addEventListener('click', async () => {
+          const code = encodeProfile(buildProfileData(false));
+          const url = `${location.origin}${location.pathname}#profile=${code}`;
+          await navigator.clipboard.writeText(url);
+          alert('설정 링크가 복사되었습니다.');
+        });
 
         budgetInput.addEventListener('click', () => budgetInput.select());
         maxItemsInput.addEventListener('click', () => maxItemsInput.select());
@@ -1547,17 +1839,6 @@
             superSerumToggle.addEventListener('change', () => { calculate(); triggerAutoRecommend(); saveState(); });
         }
         triageToggle.addEventListener('change', () => { calculate(); triggerAutoRecommend(); saveState(); });
-
-        // 아이템 체크박스 변경 시
-        includeInputs.forEach(input => {
-            input.addEventListener('change', () => {
-                if (input.dataset.name === '아마리의 해독제') {
-                    lowHpInput.checked = input.checked;
-                }
-                calculate(); saveState();
-            });
-        });
-        pinInputs.forEach(pin => pin.addEventListener('change', () => { triggerAutoRecommend(); saveState(); }));
 
         toggleScenarioBtn.addEventListener('click', () => {
             const isHidden = scenarioContent.style.display === 'none';
@@ -1584,6 +1865,8 @@
                 }
             });
         });
+
+        attachItemInputListeners();
 
         window.addEventListener('beforeunload', saveState);
 
